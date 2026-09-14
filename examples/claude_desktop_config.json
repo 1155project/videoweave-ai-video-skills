@@ -1,0 +1,42 @@
+{
+  "_readme": [
+    "Claude Desktop only supports stdio MCP servers (local subprocesses).",
+    "It cannot connect directly to a remote HTTP URL.",
+    "Use videoweave-mcp-bridge to proxy between Claude Desktop and the VideoWeave server.",
+    "",
+    "Config file locations:",
+    "  macOS:   ~/Library/Application Support/Claude/claude_desktop_config.json",
+    "  Windows: %APPDATA%\\Claude\\claude_desktop_config.json",
+    "  Linux:   ~/.config/Claude/claude_desktop_config.json",
+    "",
+    "Prerequisites:",
+    "  1. pip install requests",
+    "  2. chmod +x videoweave-mcp-bridge",
+    "  3. Copy videoweave-mcp-bridge to somewhere on your PATH, e.g.:",
+    "       macOS/Linux:  cp videoweave-mcp-bridge /usr/local/bin/",
+    "       Windows:      copy videoweave-mcp-bridge.py to a folder in PATH",
+    "",
+    "Replace vw_YOUR_API_KEY_HERE with your key from Settings → API Keys in VideoWeave."
+  ],
+
+  "mcpServers": {
+    "videoweave": {
+      "command": "videoweave-mcp-bridge",
+      "env": {
+        "VIDEOWEAVE_API_KEY": "vw_YOUR_API_KEY_HERE"
+      }
+    }
+  },
+
+  "_alternative_if_not_on_path": {
+    "mcpServers": {
+      "videoweave": {
+        "command": "python3",
+        "args": [
+          "/full/path/to/videoweave-mcp-bridge",
+          "--api-key", "vw_YOUR_API_KEY_HERE"
+        ]
+      }
+    }
+  }
+}

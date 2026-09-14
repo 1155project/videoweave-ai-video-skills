@@ -1,0 +1,177 @@
+#!/usr/bin/env python3
+"""videoweave-mcp-bridge — stdio↔HTTP bridge for Claude Desktop.
+
+Claude Desktop only supports stdio MCP servers (local subprocesses that
+communicate via stdin/stdout).  This script runs locally and proxies all
+MCP protocol messages between Claude Desktop and the VideoWeave hosted MCP
+server over HTTPS.
+
+Usage (inline API key):
+    videoweave-mcp-bridge --api-key vw_YOUR_KEY_HERE
+
+Usage (env var — keeps the key out of shell history and config files):
+    VIDEOWEAVE_API_KEY=vw_YOUR_KEY_HERE videoweave-mcp-bridge
+
+Custom server URL (optional):
+    videoweave-mcp-bridge --api-key vw_... --url https://api.videoweave.io/mcp/v1
+
+Requirements:
+    pip install requests
+
+Installation:
+    chmod +x videoweave-mcp-bridge
+    cp videoweave-mcp-bridge /usr/local/bin/videoweave-mcp-bridge   # optional
+
+Claude Desktop config (claude_desktop_config.json):
+    {
+      "mcpServers": {
+        "videoweave": {
+          "command": "videoweave-mcp-bridge",
+          "env": { "VIDEOWEAVE_API_KEY": "vw_YOUR_KEY_HERE" }
+        }
+      }
+    }
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import os
+import sys
+from typing import Optional
+
+try:
+    import requests
+    from requests import Session
+except ImportError:
+    sys.stderr.write(
+        "Error: 'requests' package is required.\n"
+        "Install it with:  pip install requests\n"
+    )
+    sys.exit(1)
+
+DEFAULT_URL = "https://api.videoweave.io/mcp/v1"
+
+
+class Bridge:
+    def __init__(self, server_url: str, api_key: str) -> None:
+        self.server_url = server_url
+        self.api_key = api_key
+        self._session_token: Optional[str] = None
+        self._http = Session()
+        self._http.headers.update({"Content-Type": "application/json"})
+
+    def _auth_header(self) -> str:
+        # Use cached session token once we have one; fall back to raw API key.
+        return f"Bearer {self._session_token or self._api_key}"
+
+    @property
+    def _api_key(self) -> str:
+        return self.api_key
+
+    def _post(self, payload: dict) -> dict:
+        headers = {"Authorization": self._auth_header()}
+        try:
+            resp = self._http.post(
+                self.server_url,
+                json=payload,
+                headers=headers,
+                timeout=120,
+            )
+
+            # Adopt any new/refreshed session token the server issues.
+            new_token = (
+                resp.headers.get("X-MCP-Session-Token")
+                or resp.headers.get("X-MCP-Session-Refresh")
+            )
+            if new_token:
+                self._session_token = new_token
+
+            return resp.json()
+
+        except requests.exceptions.ConnectionError:
+            return _error(payload.get("id"), -32003,
+                          f"Cannot connect to VideoWeave MCP server at {self.server_url}")
+        except requests.exceptions.Timeout:
+            return _error(payload.get("id"), -32003,
+                          "Request timed out (120 s). The server may be busy.")
+        except Exception as exc:  # noqa: BLE001
+            return _error(payload.get("id"), -32603, f"Bridge error: {exc}")
+
+    def run(self) -> None:
+        for raw in sys.stdin:
+            raw = raw.strip()
+            if not raw:
+                continue
+
+            try:
+                payload = json.loads(raw)
+            except json.JSONDecodeError as exc:
+                _write(_error(None, -32700, f"Parse error: {exc}"))
+                continue
+
+            response = self._post(payload)
+            _write(response)
+
+
+# ---------------------------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------------------------
+
+def _error(req_id, code: int, message: str) -> dict:
+    return {"jsonrpc": "2.0", "id": req_id, "error": {"code": code, "message": message}}
+
+
+def _write(obj: dict) -> None:
+    sys.stdout.write(json.dumps(obj) + "\n")
+    sys.stdout.flush()
+
+
+# ---------------------------------------------------------------------------
+# Entry point
+# ---------------------------------------------------------------------------
+
+def main() -> None:
+    parser = argparse.ArgumentParser(
+        description="Proxy MCP messages from Claude Desktop to the VideoWeave MCP server.",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog=(
+            "Examples:\n"
+            "  videoweave-mcp-bridge --api-key vw_...\n"
+            "  VIDEOWEAVE_API_KEY=vw_... videoweave-mcp-bridge\n"
+            "  videoweave-mcp-bridge --api-key vw_... --url https://api.videoweave.io/mcp/v1"
+        ),
+    )
+    parser.add_argument(
+        "--api-key",
+        default=os.environ.get("VIDEOWEAVE_API_KEY", ""),
+        metavar="KEY",
+        help="VideoWeave MCP API key (vw_...). Can also be set via VIDEOWEAVE_API_KEY env var.",
+    )
+    parser.add_argument(
+        "--url",
+        default=os.environ.get("VIDEOWEAVE_MCP_URL", DEFAULT_URL),
+        metavar="URL",
+        help=f"VideoWeave MCP server URL (default: {DEFAULT_URL})",
+    )
+    args = parser.parse_args()
+
+    if not args.api_key:
+        sys.stderr.write(
+            "Error: API key is required.\n"
+            "  Pass it with --api-key vw_...\n"
+            "  or set the VIDEOWEAVE_API_KEY environment variable.\n"
+        )
+        sys.exit(1)
+
+    if not args.api_key.startswith("vw_"):
+        sys.stderr.write(
+            f"Warning: API key does not start with 'vw_' — it may be invalid.\n"
+        )
+
+    Bridge(server_url=args.url, api_key=args.api_key).run()
+
+
+if __name__ == "__main__":
+    main()

@@ -1,0 +1,98 @@
+---
+name: "upload_file"
+description: Upload a local video, audio, or image file to a VideoWeave project.
+type: atomic
+category: file
+requires: [project_id]
+outputs: [file_id, filename, file_type]
+mcp_tool: prepare_upload
+---
+
+# Skill: Upload File
+
+## Purpose
+Upload a local file to a VideoWeave project. Because the MCP server is hosted remotely
+and cannot access your local filesystem directly, this skill uses a two-step approach:
+the MCP tool generates a presigned upload URL, and a local CLI helper performs the
+actual file transfer.
+
+## When to Use
+- User wants to add a video clip to a project
+- User wants to upload an audio file for voiceover
+- User wants to upload a logo image for watermarking
+
+## Prerequisites
+- `project_id` — from `list_projects` or `create_project`
+- The `videoweave-upload` CLI helper must be installed locally
+- The local file must exist at the specified path
+
+## File Type Reference
+| file_type | Use For |
+|---|---|
+| `WORKING` | Standard video clips to be edited |
+| `AUDIO` | Audio files used with `add_audio` |
+| `LOGO` | Image files (PNG/JPG) used with `add_logo` |
+| `INDEX` | Intro clip (auto-prepended on finalize) |
+| `EXITING` | Outro clip (auto-appended on finalize) |
+
+## Constraints (from VideoWeave validation)
+- Max file size: 500MB per file
+- Max video duration: varies by plan (typically 2 hours)
+- Allowed video extensions: .mp4, .mov, .avi, .mkv, .webm
+- Allowed audio extensions: .mp3, .wav, .aac, .m4a, .webm
+- Allowed image extensions: .jpg, .jpeg, .png, .gif, .webp
+
+## Step 1 — Prepare Upload (MCP Tool Call)
+```json
+{
+  "tool": "prepare_upload",
+  "params": {
+    "project_id": "uuid",
+    "filename": "clip01.mp4",
+    "file_type": "WORKING"
+  }
+}
+```
+
+Response:
+```json
+{
+  "file_id": "uuid",
+  "upload_url": "https://minio.1155project.com/video-sticher-bucket/...?X-Amz-Signature=...",
+  "expires_in": 3600
+}
+```
+
+## Step 2 — Execute Local Upload
+Run the VideoWeave CLI helper with the presigned URL:
+
+```bash
+videoweave-upload --url "<upload_url>" --file "/path/to/clip01.mp4"
+```
+
+The CLI script streams the file to MinIO and confirms completion. The `file_id` is
+already registered in the database — no further call is needed.
+
+**Note:** If the agent environment supports running local scripts (e.g., via a bash tool
+in Claude Desktop), the agent can call this script directly. If not, provide the command
+to the user to run manually.
+
+## Expected Outcome
+After the upload completes, the file is available in the project. Verify with `list_files`.
+
+## Output for Chaining
+- `file_id` → required by `add_clip_to_track`, `add_audio`, `add_logo`
+
+## Error Handling
+| Error | Meaning | Action |
+|---|---|---|
+| 400 Bad Request | Invalid file type or extension | Check file_type matches the file's format |
+| 413 Payload Too Large | File exceeds size limit | Compress or split the video |
+| 422 Unprocessable Entity | Invalid parameters | Check project_id and filename |
+| Upload URL expired | URL expired before upload | Call prepare_upload again |
+
+## Example
+User: "Upload clip01.mp4 from my clips folder to the Summer Campaign project"
+→ Call `upload_file` → get `file_id` + `upload_url`
+→ Run: `videoweave-upload --url "..." --file "~/clips/clip01.mp4"`
+→ "clip01.mp4 uploaded successfully. File ID: xyz-456. Ready to add to the timeline."

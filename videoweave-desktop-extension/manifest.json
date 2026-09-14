@@ -1,0 +1,54 @@
+{
+  "manifest_version": "0.3",
+  "name": "videoweave",
+  "display_name": "VideoWeave",
+  "version": "1.0.0",
+  "description": "Control VideoWeave video editing from Claude — manage projects, upload clips, cut, join, add text, and produce final videos.",
+  "long_description": "VideoWeave gives Claude 25 tools covering the full video editing workflow: create projects, upload clips, arrange a timeline, apply effects (cut, join, slow motion, speed up, text overlays, logos, audio), and produce a final output video. All processing runs server-side — no local software required beyond this extension.",
+  "author": {
+    "name": "VideoWeave",
+    "url": "https://videoweave.io"
+  },
+  "homepage": "https://videoweave.io",
+  "documentation": "https://docs.videoweave.io",
+  "support": "https://support.videoweave.io",
+  "keywords": ["video", "editing", "media", "ffmpeg", "timeline"],
+  "license": "MIT",
+  "privacy_policies": ["https://videoweave.io/privacy"],
+  "server": {
+    "type": "node",
+    "entry_point": "bridge.js",
+    "mcp_config": {
+      "command": "node",
+      "args": ["${__dirname}/bridge.js"],
+      "env": {
+        "VIDEOWEAVE_API_KEY": "${user_config.api_key}",
+        "VIDEOWEAVE_MCP_URL": "${user_config.api_url}"
+      }
+    }
+  },
+  "tools_generated": true,
+  "compatibility": {
+    "claude_desktop": ">=1.0.0",
+    "platforms": ["darwin", "win32", "linux"],
+    "runtimes": {
+      "node": ">=16.0.0"
+    }
+  },
+  "user_config": {
+    "api_key": {
+      "type": "string",
+      "title": "API Key",
+      "description": "Your VideoWeave MCP API key. Generate one at VideoWeave → Settings → API Keys. Starts with vw_.",
+      "sensitive": true,
+      "required": true
+    },
+    "api_url": {
+      "type": "string",
+      "title": "Server URL",
+      "description": "VideoWeave MCP server URL. Leave blank to use the default production server.",
+      "default": "https://api.videoweave.io/mcp/v1",
+      "required": false
+    }
+  }
+}
