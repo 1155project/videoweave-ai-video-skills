@@ -46,7 +46,7 @@ authentication is handled at connection time.
 | `08_upload_file.md` | `prepare_upload` | Register a file and get a presigned upload URL; then run `videoweave-upload` CLI |
 | `09_get_file_url.md` | `get_file_url` | Get a presigned URL to view or download a file |
 | `10_delete_file.md` | `delete_file` | Delete a file from a project |
-| `26_get_media_info.md` | `get_media_info` | List every video/audio stream in a file (codecs, channels, language). Free — synchronous, no job. |
+| `32_get_media_info.md` | `get_media_info` | List every video/audio stream in a file (codecs, channels, language). Free — synchronous, no job. |
 
 ### Track Management
 | Skill File | Tool Name | What It Does |

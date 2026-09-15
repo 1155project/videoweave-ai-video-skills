@@ -13,9 +13,9 @@ produce a final output video. All processing is done server-side using FFmpeg.
 
 ---
 
-## Your Tools (27 total)
+## Your Tools (33 total)
 
-You have four categories of tools. Call `tools/list` to see full parameter schemas.
+You have six categories of tools. Call `tools/list` to see full parameter schemas.
 
 ### Account (1 tool)
 - `get_account_info` — user profile, credit balance, plan name
@@ -23,15 +23,18 @@ You have four categories of tools. Call `tools/list` to see full parameter schem
 ### Projects (6 tools)
 - `list_projects`, `create_project`, `get_project`, `get_project_stats`, `update_project`, `delete_project`
 
-### Files (5 tools)
+### Files (6 tools)
 - `list_files`, `prepare_upload`, `get_file_url`, `delete_file`, `confirm_upload`
+- `get_media_info` — list every video/audio stream in a file (codecs, channels, language). **Free — synchronous, not a job.**
 
 ### Timeline / Track (3 tools)
 - `get_track`, `add_clip_to_track`, `remove_clip_from_track`
 
-### Edit Operations — ASYNC (10 tools)
+### Edit Operations — ASYNC (15 tools)
 - `cut_video`, `join_videos`, `slow_video`, `speed_up_video`
-- `add_audio`, `remove_audio`, `add_logo`, `add_text`
+- `add_audio`, `remove_audio` (optionally with `track_index` to remove one specific audio stream)
+- `trim_clip`, `fade_clip`, `reverse_clip`, `adjust_audio_volume`, `extract_audio_track`
+- `add_logo`, `add_text`
 - `undo`, `finalize_video`
 
 ### Jobs (2 tools)
@@ -44,6 +47,7 @@ You have four categories of tools. Call `tools/list` to see full parameter schem
 ### 1. Async edit operations MUST be polled
 
 `cut_video`, `join_videos`, `slow_video`, `speed_up_video`, `add_audio`, `remove_audio`,
+`trim_clip`, `fade_clip`, `reverse_clip`, `adjust_audio_volume`, `extract_audio_track`,
 `add_logo`, `add_text`, `finalize_video` all return immediately with a `job_id` and
 `status: QUEUED`. They are NOT complete when they return.
 
@@ -52,6 +56,9 @@ before doing anything else with that project.**
 
 Do not start a second edit operation until the first is `COMPLETED`. Use `get_active_job`
 to check.
+
+`get_media_info` is the one exception — it's synchronous (a plain ffprobe read, no job)
+and returns its result immediately, same as `get_track`/`list_files`.
 
 ### 2. File uploads are two-step
 
@@ -125,6 +132,16 @@ Before edit: get_track → save clips list
 After edit:  undo (project_id, clips=[saved list])
 ```
 
+### Inspect and remove/extract a specific audio track
+```
+get_track [find file_id] → get_media_info (project_id, file_id)
+  [note the type-relative index in audio_streams]
+→ remove_audio (project_id, file_id, track_index) OR extract_audio_track (project_id, file_id, track_index)
+→ poll get_job_status
+```
+Never guess a `track_index` — always call `get_media_info` first. An out-of-range
+index returns `400` immediately, not a job that fails later.
+
 ---
 
 ## Error Handling
@@ -136,6 +153,7 @@ After edit:  undo (project_id, clips=[saved list])
 | `PAYMENT_REQUIRED` in job failure | User needs to buy credits at videoweave.io/billing |
 | `FAILED` job with error_message | Show the error to user; suggest retry or alternative approach |
 | Upload URL expired | Call `prepare_upload` again for a fresh URL |
+| `400` on `remove_audio`/`extract_audio_track` (track_index out of range) | Call `get_media_info` to see the actual audio stream count, then retry |
 
 ---
 

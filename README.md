@@ -4,8 +4,9 @@ This repository contains everything an LLM client (Claude Desktop, Claude Code, 
 MCP-compatible agent) needs to control VideoWeave on behalf of a user.
 
 VideoWeave exposes a hosted **Model Context Protocol (MCP) server** that gives AI agents
-27 tools covering the full video editing workflow: project management, file upload,
-timeline editing, video effects, and job tracking.
+33 tools covering the full video editing workflow: project management, file upload,
+timeline editing, video effects (including trim, fade, reverse, volume adjustment, and
+per-track audio inspection/removal/extraction), and job tracking.
 
 ---
 
@@ -48,6 +49,12 @@ skills/
     24_get_job_status.md
     25_get_active_job.md
     26_get_project_stats.md
+    27_trim_clip.md
+    28_fade_clip.md
+    29_reverse_clip.md
+    30_adjust_audio_volume.md
+    31_extract_audio_track.md
+    32_get_media_info.md
   chains/
     01_create_project_and_upload.md
 examples/
@@ -238,6 +245,7 @@ and calls the appropriate tool based on the user's request.
 | `get_file_url` | Get a 1-hour presigned download URL |
 | `delete_file` | Permanently delete a file |
 | `confirm_upload` | Confirm a completed upload and generate its thumbnail |
+| `get_media_info` | List every video/audio stream in a file — codecs, resolution or channels/sample rate, language tags. **Free — synchronous, no job.** |
 
 ### Timeline (Track)
 
@@ -259,7 +267,12 @@ until the status is `COMPLETED` or `FAILED` before proceeding.
 | `slow_video` | Slow down 2×, 3×, or 4× | 15–45 s |
 | `speed_up_video` | Speed up 2× or 3× | 10–30 s |
 | `add_audio` | Add or replace audio on a clip | 10–30 s |
-| `remove_audio` | Strip all audio from a clip | 5–15 s |
+| `remove_audio` | Strip audio from a clip — all of it, or one specific track via `track_index` (see `get_media_info`) | 5–15 s |
+| `trim_clip` | Extract a `[start_time, end_time]` sub-segment as one new clip (unlike `cut_video`, which splits into two) | 5–15 s |
+| `fade_clip` | Fade a clip in and/or out — video and audio together | 10–30 s |
+| `reverse_clip` | Reverse a clip's playback — video and audio together (rejected if the clip is very long) | 15–60 s |
+| `adjust_audio_volume` | Adjust a clip's own audio gain by a multiplier (0.1–2.0) | 10–20 s |
+| `extract_audio_track` | Save one audio stream from a clip as a standalone AUDIO file — does **not** modify the source clip | 5–15 s |
 | `add_logo` | Overlay a logo/watermark | 10–30 s |
 | `add_text` | Add a styled text overlay | 10–30 s |
 | `undo` | Restore timeline to a previous snapshot | instant |
@@ -360,6 +373,10 @@ Edit operations are processed in the background. The correct polling pattern is:
 edit operation before the first is `COMPLETED`. Use `get_active_job` to check before
 starting any edit.
 
+**`get_media_info` is the one exception** — it's a synchronous ffprobe read (no
+RabbitMQ job, no polling), same as `get_track`/`list_files`. It returns its result
+immediately.
+
 ---
 
 ## Credit System
@@ -368,10 +385,12 @@ Edit operations consume credits from your VideoWeave plan. Approximate costs:
 
 | Operation | Credits |
 |-----------|---------|
-| cut / join / finalize | 15–20 |
-| slow / speed_up | 20–25 |
-| add_audio / remove_audio | 10–15 |
+| cut / join / trim / fade / finalize | 15–20 |
+| slow / speed_up / reverse | 20–25 |
+| add_audio / remove_audio / adjust_audio_volume | 10–15 |
+| extract_audio_track | 15–20 |
 | add_logo / add_text | 15–20 |
+| get_media_info | Free — synchronous, no credits consumed |
 
 Check your balance before starting a session:
 
@@ -412,6 +431,18 @@ get_track → add_logo (each clip, poll each) → finalize_video → get_job_sta
 get_track [save snapshot] → [edit runs] → undo (pass saved snapshot) → get_track [verify]
 ```
 
+### Inspect and remove/extract a specific audio track
+
+```
+get_track → get_media_info [note the type-relative audio_streams index] →
+  remove_audio (with track_index) OR extract_audio_track (with track_index) →
+  get_job_status (poll)
+```
+
+Always call `get_media_info` first when targeting a specific track — never guess an
+index. A `track_index` beyond the file's actual audio stream count returns `400`
+immediately, not a queued job that fails later.
+
 ---
 
 ## Skills
@@ -443,7 +474,7 @@ specification version `2024-11-05`.
 |--------|-------------|
 | `initialize` | Handshake — returns server capabilities |
 | `ping` | Health check |
-| `tools/list` | Returns all 25 tool definitions with JSON Schema |
+| `tools/list` | Returns all 33 tool definitions with JSON Schema |
 | `tools/call` | Execute a tool |
 
 ### Example Request/Response
