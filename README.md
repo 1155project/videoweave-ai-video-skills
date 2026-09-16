@@ -103,7 +103,7 @@ the recommended path for Desktop users — no terminal, no config file editing, 
 to install manually. Your API key is entered through Claude Desktop's settings UI and
 stored encrypted on your machine.
 
-1. Download `videoweave.mcpb` from [videoweave.io/download/mcp](https://videoweave.io/download/mcp)
+1. Download `videoweave-desktop-extension.mcpb` from [the videoweave-ai-video-skills repo](https://raw.githubusercontent.com/1155project/videoweave-ai-video-skills/main/videoweave-desktop-extension.mcpb)
 2. Open Claude Desktop → click **+** in the chat box → **Connectors**
 3. Click **Install Extension…** and select the downloaded `.mcpb` file
 4. Enter your `vw_` API key when prompted and click **Save**
@@ -111,6 +111,13 @@ stored encrypted on your machine.
 
 The extension bundles a zero-dependency Node.js bridge that Claude Desktop runs
 locally. It requires nothing beyond Claude Desktop itself.
+
+**Uploads are automatic.** The bridge exposes a built-in `upload_file` tool that streams
+your local file straight to VideoWeave's storage — Claude calls it directly with the
+`file_id`/`upload_url` from `prepare_upload`. You never see a terminal or run the
+`videoweave-upload` CLI helper; that helper is only needed for Claude Code, the manual
+Python bridge below, or clients without local tool execution (see
+[File Upload](#file-upload)).
 
 > See [Building the Desktop Extension](#building-the-desktop-extension) if you are
 > a developer who needs to build or modify the `.mcpb` file.
@@ -144,10 +151,25 @@ Save the file and restart Claude Desktop.
 
 #### Claude.ai Web
 
-Claude.ai Custom Connectors require the MCP server to implement OAuth 2.0.
-VideoWeave MCP currently uses API key auth. **OAuth support is planned** — once
-available, you will be able to add VideoWeave directly from
-**claude.ai → Settings → Connectors** without any local components.
+VideoWeave MCP uses API key auth, not OAuth, so pick **No sign-in** and supply the key as
+a request header — Claude.ai sends it on every request.
+
+1. Go to **claude.ai → Settings → Connectors** (Team/Enterprise: **Organization settings
+   → Connectors**) and click **Add custom connector**
+2. Enter the MCP server URL: `https://api.videoweave.io/mcp/v1`
+3. Under **Authentication**, choose **No sign-in**
+4. Under **Request headers**, add:
+   - Name: `Authorization`
+   - Value: `Bearer vw_YOUR_API_KEY_HERE` — include the literal word `Bearer` and the
+     space; Claude sends the header value exactly as entered, with no scheme added
+5. Click **Add**, then enable VideoWeave from the chat's **+ → Connectors** menu
+
+> **Note:** Request header authentication is in beta and only available to some accounts/
+> orgs. If your Add-connector dialog has no **Request headers** section, this isn't
+> enabled for you yet — use Claude Code or the Desktop Extension (above) in the meantime.
+
+Do **not** use header name `x-auth-token` here — VideoWeave's MCP server only reads the
+`Authorization` header, so the header name must be `Authorization`.
 
 #### Any HTTP MCP Client
 
@@ -318,19 +340,35 @@ Response:
 }
 ```
 
-### Step 2 — Upload the bytes (local CLI helper)
+### Step 2 — Upload the bytes
 
-Run `videoweave-upload` with the URL from Step 1:
+**Claude Desktop (Desktop Extension):** the bridge exposes a local `upload_file` tool.
+Claude calls it directly — no CLI, no terminal:
+
+```json
+{
+  "tool": "upload_file",
+  "arguments": {
+    "file_path": "/path/to/clip01.mp4",
+    "upload_url": "https://..."
+  }
+}
+```
+
+The bridge streams the file straight to VideoWeave's object storage and returns a normal
+MCP tool result (`isError: false` on success). Once complete, the file is ready — no
+further MCP call is needed.
+
+**Every other client (Claude Code, the manual Python bridge, or any client without local
+tool execution):** run the `videoweave-upload` CLI helper with the URL from Step 1:
 
 ```bash
 videoweave-upload --url "<upload_url>" --file "/path/to/clip01.mp4"
 ```
 
 The helper streams the file directly to VideoWeave's object storage. Upload progress is
-shown in the terminal. Once complete, the file is ready — no further MCP call is needed.
-
-If the agent supports running shell commands (e.g. Claude Desktop with a bash tool), it
-can run this automatically. Otherwise it provides the command for you to run.
+shown in the terminal. If the agent supports running shell commands (e.g. Claude Code),
+it can run this automatically. Otherwise it provides the command for you to run.
 
 ### File Type Reference
 
@@ -576,8 +614,13 @@ mcpb pack videoweave-desktop-extension/ videoweave-1.0.0.mcpb
 > directory (e.g. `videoweave-desktop-extension.mcpb`). Always provide an
 > explicit output name for releases.
 
-Upload `videoweave-1.0.0.mcpb` to your distribution endpoint
-(e.g. `https://videoweave.io/download/mcp`).
+Name the output `videoweave-desktop-extension.mcpb` (or `-stage.mcpb` for the staging
+config) and place it in this `ai_consumer_integration/` folder. The `sync-ai-skills` CI
+job mirrors this folder to the public
+[videoweave-ai-video-skills](https://github.com/1155project/videoweave-ai-video-skills)
+repo on every successful production deploy, so committing it here is what publishes it —
+no separate upload step. Once synced, it's downloadable at:
+`https://raw.githubusercontent.com/1155project/videoweave-ai-video-skills/main/videoweave-desktop-extension.mcpb`
 
 ### Updating the extension
 

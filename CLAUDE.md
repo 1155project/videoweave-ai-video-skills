@@ -160,7 +160,10 @@ index returns `400` immediately, not a job that fails later.
 ## Connection Methods
 
 **Claude Desktop**: Uses `videoweave-mcp-bridge` (local stdio proxy). The bridge handles
-session token caching automatically — you never need to manage tokens manually.
+session token caching automatically — you never need to manage tokens manually. When
+connected via the Desktop Extension, the bridge also exposes a local `upload_file` tool
+— call it directly with `file_path`/`upload_url` instead of instructing the user to run
+the `videoweave-upload` CLI.
 
 **Claude Code CLI**: Connects directly to `https://api.videoweave.io/mcp/v1` via HTTP.
 Session tokens are managed per the `X-MCP-Session-Token` / `X-MCP-Session-Refresh` headers.

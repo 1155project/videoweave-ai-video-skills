@@ -64,7 +64,25 @@ Response:
 ```
 
 ## Step 2 — Execute Local Upload
-Run the VideoWeave CLI helper with the presigned URL:
+
+**If connected via the VideoWeave Desktop Extension:** call the bridge's local
+`upload_file` MCP tool directly — do not run a CLI command:
+
+```json
+{
+  "tool": "upload_file",
+  "arguments": {
+    "file_path": "/path/to/clip01.mp4",
+    "upload_url": "<upload_url>"
+  }
+}
+```
+
+The bridge streams the file locally and returns a normal MCP tool result
+(`isError: false` on success). No terminal is shown to the user.
+
+**Every other client** (Claude Code, the manual Python bridge, or any client without
+local tool execution): run the VideoWeave CLI helper with the presigned URL:
 
 ```bash
 videoweave-upload --url "<upload_url>" --file "/path/to/clip01.mp4"
@@ -74,7 +92,7 @@ The CLI script streams the file to MinIO and confirms completion. The `file_id` 
 already registered in the database — no further call is needed.
 
 **Note:** If the agent environment supports running local scripts (e.g., via a bash tool
-in Claude Desktop), the agent can call this script directly. If not, provide the command
+in Claude Code), the agent can call this script directly. If not, provide the command
 to the user to run manually.
 
 ## Expected Outcome

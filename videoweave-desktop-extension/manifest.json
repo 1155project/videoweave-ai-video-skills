@@ -2,7 +2,7 @@
   "manifest_version": "0.3",
   "name": "videoweave",
   "display_name": "VideoWeave",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Control VideoWeave video editing from Claude — manage projects, upload clips, cut, join, add text, and produce final videos.",
   "long_description": "VideoWeave gives Claude 25 tools covering the full video editing workflow: create projects, upload clips, arrange a timeline, apply effects (cut, join, slow motion, speed up, text overlays, logos, audio), and produce a final output video. All processing runs server-side — no local software required beyond this extension.",
   "author": {
