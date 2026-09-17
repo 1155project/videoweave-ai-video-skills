@@ -58,7 +58,7 @@ Response:
 ```json
 {
   "file_id": "uuid",
-  "upload_url": "https://minio.1155project.com/video-sticher-bucket/...?X-Amz-Signature=...",
+  "upload_url": "https://storage.videoweave.io/uploads/...?signature=...",
   "expires_in": 3600
 }
 ```
@@ -88,7 +88,7 @@ local tool execution): run the VideoWeave CLI helper with the presigned URL:
 videoweave-upload --url "<upload_url>" --file "/path/to/clip01.mp4"
 ```
 
-The CLI script streams the file to MinIO and confirms completion. The `file_id` is
+The CLI script streams the file to storage and confirms completion. The `file_id` is
 already registered in the database — no further call is needed.
 
 **Note:** If the agent environment supports running local scripts (e.g., via a bash tool

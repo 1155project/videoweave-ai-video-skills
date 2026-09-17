@@ -44,7 +44,7 @@ CLI scripts. URLs expire after 1 hour.
 ## Expected Response
 ```json
 {
-  "presigned_url": "https://minio.1155project.com/video-sticher-bucket/...?X-Amz-Signature=...",
+  "presigned_url": "https://storage.videoweave.io/files/...?signature=...",
   "expires_in": 3600
 }
 ```

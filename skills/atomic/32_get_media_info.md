@@ -12,9 +12,9 @@ mcp_tool: get_media_info
 # Skill: Get Media Info
 
 ## Purpose
-List every video and audio stream in a file, as reported by ffprobe — codec, resolution
-or channels/sample rate, and language tag if present. This is a **free, synchronous**
-call (a plain ffprobe read, no RabbitMQ job) — do NOT poll `get_job_status` after this.
+List every video and audio stream in a file — codec, resolution or channels/sample rate,
+and language tag if present. This is a **free, synchronous** call (a direct media
+inspection, no background job) — do NOT poll `get_job_status` after this.
 
 `get_track` is a different thing: it returns the project's **timeline clip order**.
 `get_media_info` returns the **stream-level detail inside one file**.
@@ -68,7 +68,7 @@ to `remove_audio`/`extract_audio_track`. It is NOT a container-wide stream index
 | Error | Meaning | Action |
 |---|---|---|
 | 404 Not Found | File not found in project | Verify via `list_files` |
-| 400 Bad Request | ffprobe could not read the file (corrupt/unsupported) | Inform user, suggest re-uploading |
+| 400 Bad Request | The file could not be read (corrupt/unsupported) | Inform user, suggest re-uploading |
 
 ## Example
 User: "This clip has commentary and music mixed as separate tracks — can you drop just the commentary?"

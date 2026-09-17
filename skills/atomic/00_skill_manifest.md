@@ -73,6 +73,11 @@ authentication is handled at connection time.
 | `29_reverse_clip.md` | `reverse_clip` | Reverse a clip's playback (video + audio) |
 | `30_adjust_audio_volume.md` | `adjust_audio_volume` | Adjust a clip's own audio gain by a multiplier |
 | `31_extract_audio_track.md` | `extract_audio_track` | Save one audio stream from a clip as a standalone AUDIO file |
+| `33_adjust_brightness.md` | `adjust_brightness` | Adjust a clip's brightness |
+| `34_adjust_contrast.md` | `adjust_contrast` | Adjust a clip's contrast |
+| `35_adjust_saturation.md` | `adjust_saturation` | Adjust a clip's color saturation |
+| `36_adjust_gamma.md` | `adjust_gamma` | Adjust a clip's gamma (midtone brightness) |
+| `37_adjust_white_balance.md` | `adjust_white_balance` | Adjust a clip's color balance via per-channel gamma |
 
 ### Jobs
 | Skill File | Tool Name | What It Does |
@@ -120,11 +125,18 @@ finalize_video       → requires: project_id, at least one clip in track
 trim_clip            → requires: project_id, file_id of clip in track, start_time, end_time
 fade_clip            → requires: project_id, file_id of clip in track
 reverse_clip         → requires: project_id, file_id of clip in track (rejected if clip is
-                        very long — FFmpeg must buffer the whole clip in memory to reverse it)
+                        very long — reversing requires buffering the whole clip in memory)
 adjust_audio_volume  → requires: project_id, file_id of clip in track
 extract_audio_track  → requires: project_id, file_id of clip in track. Optional track_index
                         (see get_media_info) selects which audio stream to save; does NOT
                         modify the source clip.
+adjust_brightness    → requires: project_id, file_id of clip in track. Video only — audio untouched.
+adjust_contrast      → requires: project_id, file_id of clip in track. Video only — audio untouched.
+adjust_saturation    → requires: project_id, file_id of clip in track. Video only — audio untouched.
+                        saturation=0.0 produces a fully grayscale output.
+adjust_gamma         → requires: project_id, file_id of clip in track. Video only — audio untouched.
+adjust_white_balance → requires: project_id, file_id of clip in track. Video only — audio untouched.
+                        Set red/green/blue independently; each defaults to 1.0 (no-op).
 
 get_job_status       → requires: project_id, job_id (returned by any edit operation)
 get_active_job       → requires: project_id
@@ -140,10 +152,11 @@ get_active_job       → requires: project_id
 
 Async skills: `cut_video`, `join_videos`, `slow_video`, `speed_up_video`, `add_audio`,
 `remove_audio`, `add_logo`, `add_text`, `finalize_video`, `trim_clip`, `fade_clip`,
-`reverse_clip`, `adjust_audio_volume`, `extract_audio_track`
+`reverse_clip`, `adjust_audio_volume`, `extract_audio_track`, `adjust_brightness`,
+`adjust_contrast`, `adjust_saturation`, `adjust_gamma`, `adjust_white_balance`
 
-`get_media_info` is the one exception — it's synchronous (a plain ffprobe read, no
-RabbitMQ job) and returns its result immediately, same as `get_track`/`list_files`.
+`get_media_info` is the one exception — it's synchronous (a direct media inspection, no
+background job) and returns its result immediately, same as `get_track`/`list_files`.
 
 Poll interval: 3 seconds. Typical completion time: 5–30 seconds depending on clip length.
 

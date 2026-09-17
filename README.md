@@ -224,7 +224,7 @@ Authorization: Bearer vw_<your_api_key>
 ### Layer 2 — Session Token (automatic)
 
 On the first successful request with your API key, the server creates a short-lived
-**session JWT** (8-hour TTL) and returns it in the `X-MCP-Session-Token` response header.
+**session token** (8-hour TTL) and returns it in the `X-MCP-Session-Token` response header.
 MCP-aware clients adopt this token automatically for subsequent requests.
 
 When the session is more than 80% expired, the server silently issues a fresh token in
@@ -411,8 +411,8 @@ Edit operations are processed in the background. The correct polling pattern is:
 edit operation before the first is `COMPLETED`. Use `get_active_job` to check before
 starting any edit.
 
-**`get_media_info` is the one exception** — it's a synchronous ffprobe read (no
-RabbitMQ job, no polling), same as `get_track`/`list_files`. It returns its result
+**`get_media_info` is the one exception** — it's a synchronous media inspection (no
+background job, no polling), same as `get_track`/`list_files`. It returns its result
 immediately.
 
 ---

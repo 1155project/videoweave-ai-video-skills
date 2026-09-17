@@ -54,8 +54,8 @@ an async operation — poll `get_job_status` after calling.
 
 ## REQUIRED: Poll for Completion
 Poll `get_job_status` every 3 seconds until `COMPLETED` or `FAILED`. Reverse can take
-longer than other operations on longer clips — FFmpeg must buffer the entire clip in
-memory to reverse it (there is no streaming/chunked reverse).
+longer than other operations on longer clips — reversing requires buffering the entire
+clip in memory (there is no streaming/chunked reverse).
 
 ## Error Handling
 | Error | Meaning | Action |
