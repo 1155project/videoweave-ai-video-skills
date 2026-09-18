@@ -78,6 +78,14 @@ authentication is handled at connection time.
 | `35_adjust_saturation.md` | `adjust_saturation` | Adjust a clip's color saturation |
 | `36_adjust_gamma.md` | `adjust_gamma` | Adjust a clip's gamma (midtone brightness) |
 | `37_adjust_white_balance.md` | `adjust_white_balance` | Adjust a clip's color balance via per-channel gamma |
+| `38_crop_video.md` | `crop_video` | Crop a clip to a pixel rectangle |
+| `39_rotate_video.md` | `rotate_video` | Rotate a clip by 90, 180, or 270 degrees |
+| `40_flip_video.md` | `flip_video` | Mirror a clip horizontally or vertically |
+| `41_sharpen_video.md` | `sharpen_video` | Sharpen a clip |
+| `42_blur_video.md` | `blur_video` | Blur a clip |
+| `43_denoise_video.md` | `denoise_video` | Reduce noise/grain in a clip |
+| `44_deblock_video.md` | `deblock_video` | Reduce compression blockiness in a clip |
+| `45_enhance_video.md` | `enhance_video` | Apply a single quality-improvement pass combining color, sharpness, and noise reduction |
 
 ### Jobs
 | Skill File | Tool Name | What It Does |
@@ -137,6 +145,25 @@ adjust_saturation    → requires: project_id, file_id of clip in track. Video o
 adjust_gamma         → requires: project_id, file_id of clip in track. Video only — audio untouched.
 adjust_white_balance → requires: project_id, file_id of clip in track. Video only — audio untouched.
                         Set red/green/blue independently; each defaults to 1.0 (no-op).
+crop_video           → requires: project_id, file_id of clip in track, x, y, width, height.
+                        Video only — audio untouched. Call get_media_info first to learn
+                        actual pixel dimensions; an out-of-bounds rectangle is rejected (400)
+                        when dimensions are known.
+rotate_video         → requires: project_id, file_id of clip in track, degrees (90/180/270 only).
+                        Video only — audio untouched. 90/270 swap width and height.
+flip_video           → requires: project_id, file_id of clip in track, direction
+                        ("horizontal" or "vertical"). Video only — audio untouched.
+sharpen_video        → requires: project_id, file_id of clip in track. Video only —
+                        audio untouched. Optional amount (0.0-5.0, default 0.0 no-op).
+blur_video           → requires: project_id, file_id of clip in track. Video only —
+                        audio untouched. Optional amount (0.0-20.0, default 0.0 no-op).
+denoise_video        → requires: project_id, file_id of clip in track. Video only —
+                        audio untouched. Optional amount (0.0-3.0, default 0.0 no-op).
+deblock_video        → requires: project_id, file_id of clip in track. Video only —
+                        audio untouched. No tunable parameter.
+enhance_video        → requires: project_id, file_id of clip in track. Video only —
+                        audio untouched. Optional strength (0.0-1.0, default 0.5 —
+                        an active improvement, not a no-op).
 
 get_job_status       → requires: project_id, job_id (returned by any edit operation)
 get_active_job       → requires: project_id
@@ -153,7 +180,9 @@ get_active_job       → requires: project_id
 Async skills: `cut_video`, `join_videos`, `slow_video`, `speed_up_video`, `add_audio`,
 `remove_audio`, `add_logo`, `add_text`, `finalize_video`, `trim_clip`, `fade_clip`,
 `reverse_clip`, `adjust_audio_volume`, `extract_audio_track`, `adjust_brightness`,
-`adjust_contrast`, `adjust_saturation`, `adjust_gamma`, `adjust_white_balance`
+`adjust_contrast`, `adjust_saturation`, `adjust_gamma`, `adjust_white_balance`,
+`crop_video`, `rotate_video`, `flip_video`, `sharpen_video`, `blur_video`,
+`denoise_video`, `deblock_video`, `enhance_video`
 
 `get_media_info` is the one exception — it's synchronous (a direct media inspection, no
 background job) and returns its result immediately, same as `get_track`/`list_files`.
