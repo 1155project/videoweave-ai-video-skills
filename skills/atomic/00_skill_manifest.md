@@ -86,6 +86,12 @@ authentication is handled at connection time.
 | `43_denoise_video.md` | `denoise_video` | Reduce noise/grain in a clip |
 | `44_deblock_video.md` | `deblock_video` | Reduce compression blockiness in a clip |
 | `45_enhance_video.md` | `enhance_video` | Apply a single quality-improvement pass combining color, sharpness, and noise reduction |
+| `46_apply_vignette.md` | `apply_vignette` | Apply a vignette effect (darkened edges) to a clip |
+| `47_apply_sepia.md` | `apply_sepia` | Apply a sepia tone to a clip |
+| `48_apply_grayscale.md` | `apply_grayscale` | Convert a clip to grayscale (equivalent to adjust_saturation with saturation=0) |
+| `49_pixelate_video.md` | `pixelate_video` | Apply a pixelation/mosaic effect to a clip |
+| `50_apply_emboss.md` | `apply_emboss` | Apply an emboss/relief effect to a clip |
+| `51_detect_edges.md` | `detect_edges` | Apply an edge-detection outline effect to a clip |
 
 ### Jobs
 | Skill File | Tool Name | What It Does |
@@ -164,6 +170,19 @@ deblock_video        → requires: project_id, file_id of clip in track. Video o
 enhance_video        → requires: project_id, file_id of clip in track. Video only —
                         audio untouched. Optional strength (0.0-1.0, default 0.5 —
                         an active improvement, not a no-op).
+apply_vignette       → requires: project_id, file_id of clip in track. Video only —
+                        audio untouched. Optional strength (0.0-1.0, default 0.0 no-op).
+apply_sepia          → requires: project_id, file_id of clip in track. Video only —
+                        audio untouched. No tunable parameter.
+apply_grayscale      → requires: project_id, file_id of clip in track. Video only —
+                        audio untouched. No tunable parameter. Equivalent to
+                        adjust_saturation(saturation=0); exists for discoverability.
+pixelate_video       → requires: project_id, file_id of clip in track. Video only —
+                        audio untouched. Optional block_size (1-64, default 1 no-op).
+apply_emboss         → requires: project_id, file_id of clip in track. Video only —
+                        audio untouched. No tunable parameter.
+detect_edges         → requires: project_id, file_id of clip in track. Video only —
+                        audio untouched. No tunable parameter.
 
 get_job_status       → requires: project_id, job_id (returned by any edit operation)
 get_active_job       → requires: project_id
@@ -182,7 +201,8 @@ Async skills: `cut_video`, `join_videos`, `slow_video`, `speed_up_video`, `add_a
 `reverse_clip`, `adjust_audio_volume`, `extract_audio_track`, `adjust_brightness`,
 `adjust_contrast`, `adjust_saturation`, `adjust_gamma`, `adjust_white_balance`,
 `crop_video`, `rotate_video`, `flip_video`, `sharpen_video`, `blur_video`,
-`denoise_video`, `deblock_video`, `enhance_video`
+`denoise_video`, `deblock_video`, `enhance_video`, `apply_vignette`, `apply_sepia`,
+`apply_grayscale`, `pixelate_video`, `apply_emboss`, `detect_edges`
 
 `get_media_info` is the one exception — it's synchronous (a direct media inspection, no
 background job) and returns its result immediately, same as `get_track`/`list_files`.

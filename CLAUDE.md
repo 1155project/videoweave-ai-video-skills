@@ -13,7 +13,7 @@ produce a final output video. All processing is done server-side.
 
 ---
 
-## Your Tools (46 total)
+## Your Tools (52 total)
 
 You have six categories of tools. Call `tools/list` to see full parameter schemas.
 
@@ -30,7 +30,7 @@ You have six categories of tools. Call `tools/list` to see full parameter schema
 ### Timeline / Track (3 tools)
 - `get_track`, `add_clip_to_track`, `remove_clip_from_track`
 
-### Edit Operations — ASYNC (28 tools)
+### Edit Operations — ASYNC (34 tools)
 - `cut_video`, `join_videos`, `slow_video`, `speed_up_video`
 - `add_audio`, `remove_audio` (optionally with `track_index` to remove one specific audio stream)
 - `trim_clip`, `fade_clip`, `reverse_clip`, `adjust_audio_volume`, `extract_audio_track`
@@ -41,6 +41,11 @@ You have six categories of tools. Call `tools/list` to see full parameter schema
   dimension, video only (audio untouched); `deblock_video` takes no parameter
 - `enhance_video` — a single one-call quality-improvement pass (color + sharpness + noise
   reduction together), video only (audio untouched); default is an active improvement, not a no-op
+- `apply_vignette`, `apply_sepia`, `apply_grayscale`, `pixelate_video`, `apply_emboss`,
+  `detect_edges` — stylistic/creative looks, video only (audio untouched); `apply_sepia`,
+  `apply_grayscale`, `apply_emboss`, `detect_edges` take no tunable parameter.
+  `apply_grayscale` is equivalent to `adjust_saturation` with `saturation=0`, offered as
+  its own tool for discoverability
 - `add_logo`, `add_text`
 - `undo`, `finalize_video`
 
@@ -57,9 +62,10 @@ You have six categories of tools. Call `tools/list` to see full parameter schema
 `trim_clip`, `fade_clip`, `reverse_clip`, `adjust_audio_volume`, `extract_audio_track`,
 `adjust_brightness`, `adjust_contrast`, `adjust_saturation`, `adjust_gamma`,
 `adjust_white_balance`, `crop_video`, `rotate_video`, `flip_video`, `sharpen_video`,
-`blur_video`, `denoise_video`, `deblock_video`, `enhance_video`, `add_logo`, `add_text`,
-`finalize_video` all return immediately with a `job_id` and `status: QUEUED`. They are
-NOT complete when they return.
+`blur_video`, `denoise_video`, `deblock_video`, `enhance_video`, `apply_vignette`,
+`apply_sepia`, `apply_grayscale`, `pixelate_video`, `apply_emboss`, `detect_edges`,
+`add_logo`, `add_text`, `finalize_video` all return immediately with a `job_id` and
+`status: QUEUED`. They are NOT complete when they return.
 
 **You must poll `get_job_status` every 3 seconds until status is `COMPLETED` or `FAILED`
 before doing anything else with that project.**
