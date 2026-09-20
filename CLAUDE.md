@@ -13,7 +13,7 @@ produce a final output video. All processing is done server-side.
 
 ---
 
-## Your Tools (56 total)
+## Your Tools (57 total)
 
 You have six categories of tools. Call `tools/list` to see full parameter schemas.
 
@@ -30,7 +30,7 @@ You have six categories of tools. Call `tools/list` to see full parameter schema
 ### Timeline / Track (3 tools)
 - `get_track`, `add_clip_to_track`, `remove_clip_from_track`
 
-### Edit Operations — ASYNC (38 tools)
+### Edit Operations — ASYNC (39 tools)
 - `cut_video`, `join_videos`, `slow_video`, `speed_up_video`
 - `add_audio`, `remove_audio` (optionally with `track_index` to remove one specific audio stream)
 - `trim_clip`, `fade_clip`, `reverse_clip`, `adjust_audio_volume`, `extract_audio_track`
@@ -52,6 +52,8 @@ You have six categories of tools. Call `tools/list` to see full parameter schema
 - `apply_chroma_key` — composite a green/blue-screen clip onto a background image;
   `background_file_id` must reference an image (file_type BACKGROUND); video
   backgrounds not yet supported
+- `convert_frame_rate` — resample a clip to a target frame rate (frame
+  drop/duplicate); playback speed and duration are unchanged
 - `add_logo`, `add_text`
 - `undo`, `finalize_video`
 
@@ -70,7 +72,7 @@ You have six categories of tools. Call `tools/list` to see full parameter schema
 `adjust_white_balance`, `crop_video`, `rotate_video`, `flip_video`, `sharpen_video`,
 `blur_video`, `denoise_video`, `deblock_video`, `enhance_video`, `apply_vignette`,
 `apply_sepia`, `apply_grayscale`, `pixelate_video`, `apply_emboss`, `detect_edges`,
-`zoom_video`, `pan_video`, `ken_burns_video`, `apply_chroma_key`,
+`zoom_video`, `pan_video`, `ken_burns_video`, `apply_chroma_key`, `convert_frame_rate`,
 `add_logo`, `add_text`, `finalize_video` all return immediately with a `job_id` and
 `status: QUEUED`. They are NOT complete when they return.
 

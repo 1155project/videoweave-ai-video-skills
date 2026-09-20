@@ -96,6 +96,7 @@ authentication is handled at connection time.
 | `53_pan_video.md` | `pan_video` | Pan across the frame in one direction at a fixed zoom level, across the whole clip |
 | `54_ken_burns_video.md` | `ken_burns_video` | Apply an animated zoom-and-pan (Ken Burns) effect to a clip |
 | `55_apply_chroma_key.md` | `apply_chroma_key` | Composite a green/blue-screen clip onto a background image |
+| `56_convert_frame_rate.md` | `convert_frame_rate` | Convert a clip to a target frame rate |
 
 ### Jobs
 | Skill File | Tool Name | What It Does |
@@ -201,6 +202,8 @@ apply_chroma_key     → requires: project_id, file_id of clip in track,
                         audio from the foreground clip is preserved.
                         Background must be a still image; video backgrounds
                         not yet supported.
+convert_frame_rate   → requires: project_id, file_id of clip in track, target_fps
+                        (0 < target_fps <= 120). Video only — audio untouched.
 
 get_job_status       → requires: project_id, job_id (returned by any edit operation)
 get_active_job       → requires: project_id
@@ -221,7 +224,7 @@ Async skills: `cut_video`, `join_videos`, `slow_video`, `speed_up_video`, `add_a
 `crop_video`, `rotate_video`, `flip_video`, `sharpen_video`, `blur_video`,
 `denoise_video`, `deblock_video`, `enhance_video`, `apply_vignette`, `apply_sepia`,
 `apply_grayscale`, `pixelate_video`, `apply_emboss`, `detect_edges`, `zoom_video`,
-`pan_video`, `ken_burns_video`, `apply_chroma_key`
+`pan_video`, `ken_burns_video`, `apply_chroma_key`, `convert_frame_rate`
 
 `get_media_info` is the one exception — it's synchronous (a direct media inspection, no
 background job) and returns its result immediately, same as `get_track`/`list_files`.
