@@ -95,6 +95,7 @@ authentication is handled at connection time.
 | `52_zoom_video.md` | `zoom_video` | Animate a zoom from one level to another across the whole clip |
 | `53_pan_video.md` | `pan_video` | Pan across the frame in one direction at a fixed zoom level, across the whole clip |
 | `54_ken_burns_video.md` | `ken_burns_video` | Apply an animated zoom-and-pan (Ken Burns) effect to a clip |
+| `55_apply_chroma_key.md` | `apply_chroma_key` | Composite a green/blue-screen clip onto a background image |
 
 ### Jobs
 | Skill File | Tool Name | What It Does |
@@ -195,6 +196,11 @@ pan_video            → requires: project_id, file_id of clip in track, directi
 ken_burns_video      → requires: project_id, file_id of clip in track, start_zoom,
                         end_zoom. Video only — audio untouched. Animates across the
                         whole clip; no timeline-windowing support.
+apply_chroma_key     → requires: project_id, file_id of clip in track,
+                        background_file_id of an image file. Video only —
+                        audio from the foreground clip is preserved.
+                        Background must be a still image; video backgrounds
+                        not yet supported.
 
 get_job_status       → requires: project_id, job_id (returned by any edit operation)
 get_active_job       → requires: project_id
@@ -215,7 +221,7 @@ Async skills: `cut_video`, `join_videos`, `slow_video`, `speed_up_video`, `add_a
 `crop_video`, `rotate_video`, `flip_video`, `sharpen_video`, `blur_video`,
 `denoise_video`, `deblock_video`, `enhance_video`, `apply_vignette`, `apply_sepia`,
 `apply_grayscale`, `pixelate_video`, `apply_emboss`, `detect_edges`, `zoom_video`,
-`pan_video`, `ken_burns_video`
+`pan_video`, `ken_burns_video`, `apply_chroma_key`
 
 `get_media_info` is the one exception — it's synchronous (a direct media inspection, no
 background job) and returns its result immediately, same as `get_track`/`list_files`.

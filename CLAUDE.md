@@ -13,7 +13,7 @@ produce a final output video. All processing is done server-side.
 
 ---
 
-## Your Tools (55 total)
+## Your Tools (56 total)
 
 You have six categories of tools. Call `tools/list` to see full parameter schemas.
 
@@ -30,7 +30,7 @@ You have six categories of tools. Call `tools/list` to see full parameter schema
 ### Timeline / Track (3 tools)
 - `get_track`, `add_clip_to_track`, `remove_clip_from_track`
 
-### Edit Operations — ASYNC (37 tools)
+### Edit Operations — ASYNC (38 tools)
 - `cut_video`, `join_videos`, `slow_video`, `speed_up_video`
 - `add_audio`, `remove_audio` (optionally with `track_index` to remove one specific audio stream)
 - `trim_clip`, `fade_clip`, `reverse_clip`, `adjust_audio_volume`, `extract_audio_track`
@@ -49,6 +49,9 @@ You have six categories of tools. Call `tools/list` to see full parameter schema
 - `zoom_video`, `pan_video`, `ken_burns_video` — animated motion effects, video only
   (audio untouched); each animates across the ENTIRE clip with no timeline-windowing
   support; `ken_burns_video` combines zoom + pan in one call
+- `apply_chroma_key` — composite a green/blue-screen clip onto a background image;
+  `background_file_id` must reference an image (file_type BACKGROUND); video
+  backgrounds not yet supported
 - `add_logo`, `add_text`
 - `undo`, `finalize_video`
 
@@ -67,7 +70,7 @@ You have six categories of tools. Call `tools/list` to see full parameter schema
 `adjust_white_balance`, `crop_video`, `rotate_video`, `flip_video`, `sharpen_video`,
 `blur_video`, `denoise_video`, `deblock_video`, `enhance_video`, `apply_vignette`,
 `apply_sepia`, `apply_grayscale`, `pixelate_video`, `apply_emboss`, `detect_edges`,
-`zoom_video`, `pan_video`, `ken_burns_video`,
+`zoom_video`, `pan_video`, `ken_burns_video`, `apply_chroma_key`,
 `add_logo`, `add_text`, `finalize_video` all return immediately with a `job_id` and
 `status: QUEUED`. They are NOT complete when they return.
 
@@ -116,6 +119,7 @@ When uploading, `file_type` controls how a file is used:
 - `WORKING` — standard video clip (default)
 - `AUDIO` — for use with `add_audio` (the `audio_file_id` parameter)
 - `LOGO` — PNG/JPG for use with `add_logo` (the `logo_id` parameter)
+- `BACKGROUND` — image for use with `apply_chroma_key` (the `background_file_id` parameter)
 - `INDEX` — intro clip (auto-prepended by `finalize_video`)
 - `EXITING` — outro clip (auto-appended by `finalize_video`)
 
