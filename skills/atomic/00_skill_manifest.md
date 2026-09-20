@@ -92,6 +92,9 @@ authentication is handled at connection time.
 | `49_pixelate_video.md` | `pixelate_video` | Apply a pixelation/mosaic effect to a clip |
 | `50_apply_emboss.md` | `apply_emboss` | Apply an emboss/relief effect to a clip |
 | `51_detect_edges.md` | `detect_edges` | Apply an edge-detection outline effect to a clip |
+| `52_zoom_video.md` | `zoom_video` | Animate a zoom from one level to another across the whole clip |
+| `53_pan_video.md` | `pan_video` | Pan across the frame in one direction at a fixed zoom level, across the whole clip |
+| `54_ken_burns_video.md` | `ken_burns_video` | Apply an animated zoom-and-pan (Ken Burns) effect to a clip |
 
 ### Jobs
 | Skill File | Tool Name | What It Does |
@@ -183,6 +186,15 @@ apply_emboss         → requires: project_id, file_id of clip in track. Video o
                         audio untouched. No tunable parameter.
 detect_edges         → requires: project_id, file_id of clip in track. Video only —
                         audio untouched. No tunable parameter.
+zoom_video           → requires: project_id, file_id of clip in track, start_zoom,
+                        end_zoom. Video only — audio untouched. Animates across the
+                        whole clip; no timeline-windowing support.
+pan_video            → requires: project_id, file_id of clip in track, direction,
+                        distance. Video only — audio untouched. Animates across the
+                        whole clip; no timeline-windowing support.
+ken_burns_video      → requires: project_id, file_id of clip in track, start_zoom,
+                        end_zoom. Video only — audio untouched. Animates across the
+                        whole clip; no timeline-windowing support.
 
 get_job_status       → requires: project_id, job_id (returned by any edit operation)
 get_active_job       → requires: project_id
@@ -202,7 +214,8 @@ Async skills: `cut_video`, `join_videos`, `slow_video`, `speed_up_video`, `add_a
 `adjust_contrast`, `adjust_saturation`, `adjust_gamma`, `adjust_white_balance`,
 `crop_video`, `rotate_video`, `flip_video`, `sharpen_video`, `blur_video`,
 `denoise_video`, `deblock_video`, `enhance_video`, `apply_vignette`, `apply_sepia`,
-`apply_grayscale`, `pixelate_video`, `apply_emboss`, `detect_edges`
+`apply_grayscale`, `pixelate_video`, `apply_emboss`, `detect_edges`, `zoom_video`,
+`pan_video`, `ken_burns_video`
 
 `get_media_info` is the one exception — it's synchronous (a direct media inspection, no
 background job) and returns its result immediately, same as `get_track`/`list_files`.

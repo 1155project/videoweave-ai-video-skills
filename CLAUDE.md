@@ -13,7 +13,7 @@ produce a final output video. All processing is done server-side.
 
 ---
 
-## Your Tools (52 total)
+## Your Tools (55 total)
 
 You have six categories of tools. Call `tools/list` to see full parameter schemas.
 
@@ -30,7 +30,7 @@ You have six categories of tools. Call `tools/list` to see full parameter schema
 ### Timeline / Track (3 tools)
 - `get_track`, `add_clip_to_track`, `remove_clip_from_track`
 
-### Edit Operations — ASYNC (34 tools)
+### Edit Operations — ASYNC (37 tools)
 - `cut_video`, `join_videos`, `slow_video`, `speed_up_video`
 - `add_audio`, `remove_audio` (optionally with `track_index` to remove one specific audio stream)
 - `trim_clip`, `fade_clip`, `reverse_clip`, `adjust_audio_volume`, `extract_audio_track`
@@ -46,6 +46,9 @@ You have six categories of tools. Call `tools/list` to see full parameter schema
   `apply_grayscale`, `apply_emboss`, `detect_edges` take no tunable parameter.
   `apply_grayscale` is equivalent to `adjust_saturation` with `saturation=0`, offered as
   its own tool for discoverability
+- `zoom_video`, `pan_video`, `ken_burns_video` — animated motion effects, video only
+  (audio untouched); each animates across the ENTIRE clip with no timeline-windowing
+  support; `ken_burns_video` combines zoom + pan in one call
 - `add_logo`, `add_text`
 - `undo`, `finalize_video`
 
@@ -64,6 +67,7 @@ You have six categories of tools. Call `tools/list` to see full parameter schema
 `adjust_white_balance`, `crop_video`, `rotate_video`, `flip_video`, `sharpen_video`,
 `blur_video`, `denoise_video`, `deblock_video`, `enhance_video`, `apply_vignette`,
 `apply_sepia`, `apply_grayscale`, `pixelate_video`, `apply_emboss`, `detect_edges`,
+`zoom_video`, `pan_video`, `ken_burns_video`,
 `add_logo`, `add_text`, `finalize_video` all return immediately with a `job_id` and
 `status: QUEUED`. They are NOT complete when they return.
 
