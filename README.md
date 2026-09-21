@@ -4,9 +4,11 @@ This repository contains everything an LLM client (Claude Desktop, Claude Code, 
 MCP-compatible agent) needs to control VideoWeave on behalf of a user.
 
 VideoWeave exposes a hosted **Model Context Protocol (MCP) server** that gives AI agents
-33 tools covering the full video editing workflow: project management, file upload,
-timeline editing, video effects (including trim, fade, reverse, volume adjustment, and
-per-track audio inspection/removal/extraction), and job tracking.
+57 tools covering the full video editing workflow: project management, file upload,
+timeline editing, a full video-effects suite (cut, trim, fade, reverse, volume adjustment,
+per-track audio inspection/removal/extraction, color correction, geometric transforms,
+quality/restoration filters, stylistic looks, motion/animation, chroma key compositing, and
+frame rate conversion), and job tracking.
 
 ---
 
@@ -55,6 +57,30 @@ skills/
     30_adjust_audio_volume.md
     31_extract_audio_track.md
     32_get_media_info.md
+    33_adjust_brightness.md
+    34_adjust_contrast.md
+    35_adjust_saturation.md
+    36_adjust_gamma.md
+    37_adjust_white_balance.md
+    38_crop_video.md
+    39_rotate_video.md
+    40_flip_video.md
+    41_sharpen_video.md
+    42_blur_video.md
+    43_denoise_video.md
+    44_deblock_video.md
+    45_enhance_video.md
+    46_apply_vignette.md
+    47_apply_sepia.md
+    48_apply_grayscale.md
+    49_pixelate_video.md
+    50_apply_emboss.md
+    51_detect_edges.md
+    52_zoom_video.md
+    53_pan_video.md
+    54_ken_burns_video.md
+    55_apply_chroma_key.md
+    56_convert_frame_rate.md
   chains/
     01_create_project_and_upload.md
 examples/
@@ -300,6 +326,78 @@ until the status is `COMPLETED` or `FAILED` before proceeding.
 | `undo` | Restore timeline to a previous snapshot | instant |
 | `finalize_video` | Join all clips into a final output | 30–120 s |
 
+### Color Correction ⚡ Async
+
+Video only — audio untouched.
+
+| Tool | Description | Typical Time |
+|------|-------------|--------------|
+| `adjust_brightness` | Adjust a clip's brightness | 10–30 s |
+| `adjust_contrast` | Adjust a clip's contrast | 10–30 s |
+| `adjust_saturation` | Adjust a clip's color saturation (`saturation=0` produces a fully grayscale output) | 10–30 s |
+| `adjust_gamma` | Adjust a clip's gamma (midtone brightness) | 10–30 s |
+| `adjust_white_balance` | Adjust a clip's color balance via independent red/green/blue channel gamma (each defaults to 1.0 — no-op) | 10–30 s |
+
+### Geometric Transforms ⚡ Async
+
+Video only — audio untouched.
+
+| Tool | Description | Typical Time |
+|------|-------------|--------------|
+| `crop_video` | Crop a clip to a pixel rectangle — call `get_media_info` first to learn actual pixel dimensions; an out-of-bounds rectangle is rejected (`400`) | 10–30 s |
+| `rotate_video` | Rotate a clip by 90, 180, or 270 degrees (90/270 swap width and height) | 10–30 s |
+| `flip_video` | Mirror a clip horizontally or vertically | 10–30 s |
+
+### Quality & Restoration ⚡ Async
+
+Video only — audio untouched.
+
+| Tool | Description | Typical Time |
+|------|-------------|--------------|
+| `sharpen_video` | Sharpen a clip (optional `amount`, 0.0–5.0, default 0.0 no-op) | 10–30 s |
+| `blur_video` | Blur a clip (optional `amount`, 0.0–20.0, default 0.0 no-op) | 10–30 s |
+| `denoise_video` | Reduce noise/grain in a clip (optional `amount`, 0.0–3.0, default 0.0 no-op) | 15–45 s |
+| `deblock_video` | Reduce compression blockiness in a clip (no tunable parameter) | 15–45 s |
+| `enhance_video` | A single quality-improvement pass combining color, sharpness, and noise reduction (optional `strength`, 0.0–1.0, default 0.5 — an active improvement, not a no-op) | 15–45 s |
+
+### Stylistic Looks ⚡ Async
+
+Video only — audio untouched.
+
+| Tool | Description | Typical Time |
+|------|-------------|--------------|
+| `apply_vignette` | Apply a vignette effect — darkened edges (optional `strength`, 0.0–1.0, default 0.0 no-op) | 10–30 s |
+| `apply_sepia` | Apply a sepia tone (no tunable parameter) | 10–30 s |
+| `apply_grayscale` | Convert a clip to grayscale — equivalent to `adjust_saturation` with `saturation=0`, offered as its own tool for discoverability (no tunable parameter) | 10–30 s |
+| `pixelate_video` | Apply a pixelation/mosaic effect (optional `block_size`, 1–64, default 1 no-op) | 10–30 s |
+| `apply_emboss` | Apply an emboss/relief effect (no tunable parameter) | 10–30 s |
+| `detect_edges` | Apply an edge-detection outline effect (no tunable parameter) | 10–30 s |
+
+### Motion & Animation ⚡ Async
+
+Video only — audio untouched. Each tool animates across the ENTIRE clip with no
+timeline-windowing support.
+
+| Tool | Description | Typical Time |
+|------|-------------|--------------|
+| `zoom_video` | Animate a zoom from one level to another across the whole clip | 20–60 s |
+| `pan_video` | Pan across the frame in one direction at a fixed zoom level, across the whole clip | 20–60 s |
+| `ken_burns_video` | Apply an animated zoom-and-pan (Ken Burns) effect — combines `zoom_video` + `pan_video` in one call | 20–60 s |
+
+### Chroma Key Compositing ⚡ Async
+
+| Tool | Description | Typical Time |
+|------|-------------|--------------|
+| `apply_chroma_key` | Composite a green/blue-screen clip onto a background image (`background_file_id` must reference an image, file_type `BACKGROUND`; video backgrounds not yet supported). Audio from the foreground clip is preserved. | 20–60 s |
+
+### Frame Rate ⚡ Async
+
+Video only — audio untouched.
+
+| Tool | Description | Typical Time |
+|------|-------------|--------------|
+| `convert_frame_rate` | Resample a clip to a target frame rate via frame drop/duplicate (`target_fps`, `0 < target_fps ≤ 120`); playback speed and duration are unchanged | 15–45 s |
+
 ### Jobs
 
 | Tool | Description |
@@ -428,7 +526,16 @@ Edit operations consume credits from your VideoWeave plan. Approximate costs:
 | add_audio / remove_audio / adjust_audio_volume | 10–15 |
 | extract_audio_track | 15–20 |
 | add_logo / add_text | 15–20 |
+| adjust_brightness / adjust_contrast / adjust_saturation / adjust_gamma / adjust_white_balance | 10–15 |
+| crop_video / rotate_video / flip_video | 10–15 |
+| sharpen_video / blur_video / denoise_video / deblock_video / enhance_video / convert_frame_rate | 15–20 |
+| apply_vignette / apply_sepia / apply_grayscale / pixelate_video / apply_emboss / detect_edges | 10–15 |
+| zoom_video / pan_video / ken_burns_video / apply_chroma_key | 20–25 |
 | get_media_info | Free — synchronous, no credits consumed |
+
+These are approximate, grouped by typical processing time — every job actually costs a base
+amount plus a per-minute-of-output charge, so the real cost for any specific clip is shown by
+`get_project_stats`, not a fixed per-tool number.
 
 Check your balance before starting a session:
 
