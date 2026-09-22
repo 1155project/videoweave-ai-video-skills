@@ -4,7 +4,7 @@ This repository contains everything an LLM client (Claude Desktop, Claude Code, 
 MCP-compatible agent) needs to control VideoWeave on behalf of a user.
 
 VideoWeave exposes a hosted **Model Context Protocol (MCP) server** that gives AI agents
-57 tools covering the full video editing workflow: project management, file upload,
+59 tools covering the full video editing workflow: project management, file upload,
 timeline editing, a full video-effects suite (cut, trim, fade, reverse, volume adjustment,
 per-track audio inspection/removal/extraction, color correction, geometric transforms,
 quality/restoration filters, stylistic looks, motion/animation, chroma key compositing, and
@@ -81,6 +81,8 @@ skills/
     54_ken_burns_video.md
     55_apply_chroma_key.md
     56_convert_frame_rate.md
+    57_rename_file.md
+    58_bulk_delete_files.md
   chains/
     01_create_project_and_upload.md
 examples/
@@ -292,6 +294,8 @@ and calls the appropriate tool based on the user's request.
 | `prepare_upload` | Register a file and get a presigned upload URL |
 | `get_file_url` | Get a 1-hour presigned download URL |
 | `delete_file` | Permanently delete a file |
+| `rename_file` | Rename a file's display name |
+| `bulk_delete_files` | Delete up to 100 files from a project in one call |
 | `confirm_upload` | Confirm a completed upload and generate its thumbnail |
 | `get_media_info` | List every video/audio stream in a file — codecs, resolution or channels/sample rate, language tags. **Free — synchronous, no job.** |
 

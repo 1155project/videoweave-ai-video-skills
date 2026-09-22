@@ -46,6 +46,8 @@ authentication is handled at connection time.
 | `08_upload_file.md` | `prepare_upload` | Register a file and get a presigned upload URL; then run `videoweave-upload` CLI |
 | `09_get_file_url.md` | `get_file_url` | Get a presigned URL to view or download a file |
 | `10_delete_file.md` | `delete_file` | Delete a file from a project |
+| `57_rename_file.md` | `rename_file` | Rename a file's display name |
+| `58_bulk_delete_files.md` | `bulk_delete_files` | Delete up to 100 files from a project in one call |
 | `32_get_media_info.md` | `get_media_info` | List every video/audio stream in a file (codecs, channels, language). Free — synchronous, no job. |
 
 ### Track Management
@@ -124,6 +126,8 @@ list_files           → requires: project_id
 prepare_upload       → requires: project_id
 get_file_url         → requires: project_id, file_id (from list_files or upload_file)
 delete_file          → requires: project_id, file_id
+rename_file          → requires: project_id, file_id of file in project, filename (1-128 chars)
+bulk_delete_files    → requires: project_id, file_ids (1-100) of files in project
 get_media_info       → requires: project_id, file_id
 
 get_track            → requires: project_id

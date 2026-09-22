@@ -13,7 +13,7 @@ produce a final output video. All processing is done server-side.
 
 ---
 
-## Your Tools (57 total)
+## Your Tools (59 total)
 
 You have six categories of tools. Call `tools/list` to see full parameter schemas.
 
@@ -23,8 +23,8 @@ You have six categories of tools. Call `tools/list` to see full parameter schema
 ### Projects (6 tools)
 - `list_projects`, `create_project`, `get_project`, `get_project_stats`, `update_project`, `delete_project`
 
-### Files (6 tools)
-- `list_files`, `prepare_upload`, `get_file_url`, `delete_file`, `confirm_upload`
+### Files (8 tools)
+- `list_files`, `prepare_upload`, `get_file_url`, `delete_file`, `rename_file`, `bulk_delete_files` (up to 100 files per call), `confirm_upload`
 - `get_media_info` — list every video/audio stream in a file (codecs, channels, language). **Free — synchronous, not a job.**
 
 ### Timeline / Track (3 tools)
