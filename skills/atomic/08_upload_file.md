@@ -81,6 +81,14 @@ Response:
 The bridge streams the file locally and returns a normal MCP tool result
 (`isError: false` on success). No terminal is shown to the user.
 
+**Do not attach or drag the video/audio file into the chat.** `file_path` must be a
+real path on the user's own computer — the bridge runs locally and reads the file
+directly from disk. If the user has attached the file to the conversation instead of
+telling you its path, its bytes went to your own remote environment, not to any
+location on their computer; the bridge will report "File not found" when you try to
+use that attachment as `file_path`. Ask the user for the file's actual local path
+instead (e.g. "What's the path to clip01.mp4 on your computer?").
+
 **Every other client** (Claude Code, the manual Python bridge, or any client without
 local tool execution): run the VideoWeave CLI helper with the presigned URL:
 
@@ -108,6 +116,7 @@ After the upload completes, the file is available in the project. Verify with `l
 | 413 Payload Too Large | File exceeds size limit | Compress or split the video |
 | 422 Unprocessable Entity | Invalid parameters | Check project_id and filename |
 | Upload URL expired | URL expired before upload | Call prepare_upload again |
+| `upload_file` reports "File not found" (Desktop Extension) | The file was attached to the chat instead of referenced by its local path | Ask the user for the file's actual path on their computer — do not use a chat attachment as `file_path` |
 
 ## Example
 User: "Upload clip01.mp4 from my clips folder to the Summer Campaign project"

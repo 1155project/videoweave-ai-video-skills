@@ -157,6 +157,15 @@ your local file straight to VideoWeave's storage — Claude calls it directly wi
 Python bridge below, or clients without local tool execution (see
 [File Upload](#file-upload)).
 
+> **Do not attach or drag your video/audio file into the chat.** Tell Claude the
+> file's path on your computer instead (e.g. "upload the file at
+> `/Users/you/Videos/clip01.mp4`"). Attaching a file to the conversation sends its
+> bytes to Claude's own remote environment, not to a location on your disk — the
+> bridge runs locally and reads the file directly from your filesystem, so it needs
+> a real local path, not a file you've shared in the chat. If you attach the file
+> first, `upload_file` will report "File not found" because it's looking on your
+> computer for a path that only exists in the conversation.
+
 > See [Building the Desktop Extension](#building-the-desktop-extension) if you are
 > a developer who needs to build or modify the `.mcpb` file.
 
@@ -822,6 +831,7 @@ Expected response:
 | Extension installed but tools missing | API key not saved | Open Connectors settings, re-enter your `vw_` key |
 | Bridge crashes immediately | `VIDEOWEAVE_API_KEY` not set | Re-open extension settings and save the API key |
 | `Cannot connect to VideoWeave` | Network or server down | Check https://status.videoweave.io |
+| `upload_file` reports "File not found" (Desktop Extension) | The file was attached/dragged into the chat instead of referenced by its local path — Claude's remote environment received the bytes, but the bridge (running on your computer) has no way to reach them | Don't attach the file to the conversation. Tell Claude the file's actual path on your computer instead |
 
 ---
 
