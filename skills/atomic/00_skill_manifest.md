@@ -57,6 +57,23 @@ authentication is handled at connection time.
 | `12_add_clip_to_track.md` | `add_clip_to_track` | Add an uploaded file to the timeline |
 | `13_remove_clip_from_track.md` | `remove_clip_from_track` | Remove a clip from the timeline |
 
+### Media Inspection (Free — synchronous, deterministic signals only, never semantic judgments)
+| Skill File | Tool Name | What It Does |
+|---|---|---|
+| `59_get_media_frame.md` | `get_media_frame` | Extract a single frame at a timestamp as a viewable image |
+| `60_get_media_frames.md` | `get_media_frames` | Extract a series of frames over a time range at a fixed interval (max 50 per call) |
+| `61_get_contact_sheet.md` | `get_contact_sheet` | Build one grid image of evenly-spaced sample frames across a clip |
+| `62_get_waveform.md` | `get_waveform` | Generate a waveform image of a clip's full audio track |
+| `63_get_audio_segment.md` | `get_audio_segment` | Extract a time-bounded audio clip (max 300 seconds) |
+| `64_detect_scene_changes.md` | `detect_scene_changes` | Detect timestamps where the visual content changes significantly |
+| `65_detect_silence.md` | `detect_silence` | Detect time ranges where the audio track is below a noise threshold |
+
+### Annotations (VideoWeave stores these; it never generates or validates them)
+| Skill File | Tool Name | What It Does |
+|---|---|---|
+| `66_set_file_annotations.md` | `set_file_annotations` | Store your own semantic conclusions about a file (additive, not overwrite) |
+| `67_get_file_annotations.md` | `get_file_annotations` | Retrieve previously stored annotations for a file, newest first |
+
 ### Edit Operations (Async — always poll job status after calling)
 | Skill File | Tool Name | What It Does |
 |---|---|---|
@@ -133,6 +150,23 @@ get_media_info       → requires: project_id, file_id
 get_track            → requires: project_id
 add_clip_to_track    → requires: project_id, file_id (must call prepare_upload + videoweave-upload first)
 remove_clip_from_track → requires: project_id, file_id
+
+get_media_frame      → requires: project_id, file_id, timestamp
+get_media_frames     → requires: project_id, file_id, start, end, interval.
+                        (end - start) / interval must not exceed 50.
+get_contact_sheet    → requires: project_id, file_id. Optional samples (2-12, default 6).
+get_waveform         → requires: project_id, file_id. File must have an audio stream.
+get_audio_segment    → requires: project_id, file_id, start, end. end - start must not
+                        exceed 300 seconds. File must have an audio stream.
+detect_scene_changes → requires: project_id, file_id. Optional threshold (0.0-1.0, default 0.4).
+detect_silence       → requires: project_id, file_id. Optional noise_db (default -30),
+                        min_duration (default 0.5).
+
+set_file_annotations → requires: project_id, file_id, annotations (object). Optional
+                        confidence (0.0-1.0), evidence (object), review_state
+                        (UNREVIEWED/CONFIRMED/REJECTED, default UNREVIEWED). Additive —
+                        each call creates a new entry, never overwrites a prior one.
+get_file_annotations → requires: project_id, file_id
 
 cut_video            → requires: project_id, file_id of clip in track
 join_videos          → requires: project_id, file_ids of 2+ clips in track

@@ -13,9 +13,9 @@ produce a final output video. All processing is done server-side.
 
 ---
 
-## Your Tools (59 total)
+## Your Tools (68 total)
 
-You have six categories of tools. Call `tools/list` to see full parameter schemas.
+You have eight categories of tools. Call `tools/list` to see full parameter schemas.
 
 ### Account (1 tool)
 - `get_account_info` — user profile, credit balance, plan name
@@ -29,6 +29,15 @@ You have six categories of tools. Call `tools/list` to see full parameter schema
 
 ### Timeline / Track (3 tools)
 - `get_track`, `add_clip_to_track`, `remove_clip_from_track`
+
+### Media Inspection (7 tools) — Free, synchronous
+- `get_media_frame`, `get_media_frames`, `get_contact_sheet` — visual sampling
+- `get_waveform`, `get_audio_segment` — audio evidence
+- `detect_scene_changes`, `detect_silence` — deterministic signal processing, NOT semantic judgments
+
+### Annotations (2 tools)
+- `set_file_annotations` — store your own semantic conclusions (VideoWeave never generates these)
+- `get_file_annotations` — retrieve previously stored annotations, newest first
 
 ### Edit Operations — ASYNC (39 tools)
 - `cut_video`, `join_videos`, `slow_video`, `speed_up_video`

@@ -2,9 +2,9 @@
   "manifest_version": "0.3",
   "name": "videoweave",
   "display_name": "VideoWeave",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "description": "Control VideoWeave video editing from Claude — manage projects, upload clips, cut, join, apply effects, and produce final videos.",
-  "long_description": "VideoWeave gives Claude 59 tools covering the full video editing workflow: create projects, upload clips, arrange a timeline, apply a full video-effects suite (cut, join, slow motion, speed up, text overlays, logos, audio, color correction, geometric transforms, quality/restoration filters, stylistic looks, motion/animation, chroma key compositing, frame rate conversion), rename and bulk-delete files, and produce a final output video. All processing runs server-side — no local software required beyond this extension.",
+  "long_description": "VideoWeave gives Claude 68 tools covering the full video editing workflow: create projects, upload clips, arrange a timeline, apply a full video-effects suite (cut, join, slow motion, speed up, text overlays, logos, audio, color correction, geometric transforms, quality/restoration filters, stylistic looks, motion/animation, chroma key compositing, frame rate conversion), rename and bulk-delete files, inspect clips deterministically (frame/audio sampling, scene and silence detection) with your own annotation storage, and produce a final output video. All processing runs server-side — no local software required beyond this extension.",
   "author": {
     "name": "VideoWeave",
     "url": "https://videoweave.io"

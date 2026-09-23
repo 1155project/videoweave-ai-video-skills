@@ -4,11 +4,12 @@ This repository contains everything an LLM client (Claude Desktop, Claude Code, 
 MCP-compatible agent) needs to control VideoWeave on behalf of a user.
 
 VideoWeave exposes a hosted **Model Context Protocol (MCP) server** that gives AI agents
-59 tools covering the full video editing workflow: project management, file upload,
+68 tools covering the full video editing workflow: project management, file upload,
 timeline editing, a full video-effects suite (cut, trim, fade, reverse, volume adjustment,
 per-track audio inspection/removal/extraction, color correction, geometric transforms,
 quality/restoration filters, stylistic looks, motion/animation, chroma key compositing, and
-frame rate conversion), and job tracking.
+frame rate conversion), deterministic media inspection (frame/audio sampling, scene and
+silence detection) with externally-supplied annotation storage, and job tracking.
 
 ---
 
@@ -83,6 +84,15 @@ skills/
     56_convert_frame_rate.md
     57_rename_file.md
     58_bulk_delete_files.md
+    59_get_media_frame.md
+    60_get_media_frames.md
+    61_get_contact_sheet.md
+    62_get_waveform.md
+    63_get_audio_segment.md
+    64_detect_scene_changes.md
+    65_detect_silence.md
+    66_set_file_annotations.md
+    67_get_file_annotations.md
   chains/
     01_create_project_and_upload.md
 examples/
@@ -306,6 +316,35 @@ and calls the appropriate tool based on the user's request.
 | `get_track` | Get the ordered clip list for the timeline |
 | `add_clip_to_track` | Append a file to the timeline |
 | `remove_clip_from_track` | Remove a clip without deleting the file |
+
+### Media Inspection
+
+All tools in this section are free — synchronous, no job. Each is a deterministic
+signal or sample ("the image changed at 12.3 seconds," "here is a frame at 4.5
+seconds") — never a semantic judgment ("this is the kitchen"). Interpreting what
+the evidence means is the calling agent's job.
+
+| Tool | Description |
+|------|-------------|
+| `get_media_frame` | Extract a single frame from a clip at a timestamp as a viewable image |
+| `get_media_frames` | Extract a series of frames over a time range at a fixed interval (max 50 per call) |
+| `get_contact_sheet` | Build one grid image of evenly-spaced sample frames across a clip, for quick visual triage |
+| `get_waveform` | Generate a waveform image of a clip's full audio track |
+| `get_audio_segment` | Extract a time-bounded audio clip (max 300 seconds) to listen to a specific segment |
+| `detect_scene_changes` | Detect timestamps where the visual content changes significantly |
+| `detect_silence` | Detect time ranges where the audio track is below a noise threshold |
+
+### Annotations
+
+VideoWeave stores annotations the calling agent supplies; it never generates or
+validates their content. Each `set_file_annotations` call adds a new entry —
+annotations are additive, not overwrite-only, so a file can accumulate them
+across sessions.
+
+| Tool | Description |
+|------|-------------|
+| `set_file_annotations` | Store your own semantic conclusions about a file (scene, quality, features, narrative role, etc.) |
+| `get_file_annotations` | Retrieve previously stored annotations for a file, newest first |
 
 ### Edit Operations ⚡ Async
 
