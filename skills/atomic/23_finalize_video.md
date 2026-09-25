@@ -5,6 +5,7 @@ type: atomic
 category: edit
 async: true
 requires: [project_id, at least one clip in track]
+# output_file_id: not yet returned by _job_response; tracked in mcp-skills-friction-reduction.md
 outputs: [job_id, output_file_id]
 mcp_tool: finalize_video
 ---
@@ -38,7 +39,7 @@ This is typically the last step in a project workflow.
 | `include_outro` | boolean | No | false | Append the account's default outro clip |
 | `include_logo` | boolean | No | false | Overlay the account's default logo throughout |
 | `transition_duration` | float | No | 0.5 | Seconds for transitions between clips |
-| `transition_type` | string | No | `"NONE"` | `"NONE"`, `"FADE"`, or `"DISSOLVE"` |
+| `transition_type` | string | No | `"none"` | `"none"`, `"fade"`, or `"dissolve"` |
 | `output_resolution` | string | No | `"1080p"` | `"1080p"` or `"4k"`. `"4k"` requires a plan with 4K support and is capped at the highest native resolution among the project's clips — never upscaled beyond source. If sources don't support the requested tier, the job silently finalizes at the highest resolution the sources actually support. |
 
 ## MCP Tool Call
@@ -50,7 +51,7 @@ This is typically the last step in a project workflow.
     "include_intro": true,
     "include_outro": true,
     "include_logo": false,
-    "transition_type": "FADE",
+    "transition_type": "fade",
     "transition_duration": 0.5
   }
 }
@@ -88,7 +89,7 @@ get_file_url → get download URL for the OUTPUT file
 ## Example
 User: "Finalize the Summer Campaign project with a fade transition"
 → Call `get_track` → verify clips are present
-→ Call `finalize_video` with `transition_type: "FADE"`
+→ Call `finalize_video` with `transition_type: "fade"`
 → Poll `get_job_status` every 5s
 → Once COMPLETED: call `list_files`, find OUTPUT file
 → Call `get_file_url` for download link

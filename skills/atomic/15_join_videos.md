@@ -31,8 +31,8 @@ an async operation — poll `get_job_status` after calling.
 |---|---|---|---|---|
 | `project_id` | UUID string | Yes | — | Project containing the clips |
 | `video_ids` | UUID[] | Yes | — | Ordered list of file_ids to join (in desired sequence) |
-| `transition_duration` | float | No | 0.5 | Transition length in seconds (0.0–2.0) |
-| `transition_type` | string | No | `"NONE"` | `"NONE"`, `"FADE"`, or `"DISSOLVE"` |
+| `transition_duration` | float | No | 0.5 | Transition length in seconds (0.0–3.0) |
+| `transition_type` | string | No | `"none"` | `"none"`, `"fade"`, or `"dissolve"` |
 
 ## MCP Tool Call
 ```json
@@ -42,7 +42,7 @@ an async operation — poll `get_job_status` after calling.
     "project_id": "uuid",
     "video_ids": ["uuid-clip1", "uuid-clip2", "uuid-clip3"],
     "transition_duration": 0.5,
-    "transition_type": "FADE"
+    "transition_type": "fade"
   }
 }
 ```
@@ -72,6 +72,6 @@ After completion, call `get_track` to see the merged clip.
 ## Example
 User: "Merge clips 1, 2, and 3 with a fade transition"
 → Call `get_track` → collect file_ids for positions 1, 2, 3
-→ Call `join_videos` with those IDs and `transition_type: "FADE"`
+→ Call `join_videos` with those IDs and `transition_type: "fade"`
 → Poll `get_job_status` → COMPLETED
 → "Merged! Your 3 clips are now a single clip in the timeline."

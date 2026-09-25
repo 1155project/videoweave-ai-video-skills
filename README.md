@@ -153,9 +153,9 @@ locally. It requires nothing beyond Claude Desktop itself.
 **Uploads are automatic.** The bridge exposes a built-in `upload_file` tool that streams
 your local file straight to VideoWeave's storage — Claude calls it directly with the
 `file_id`/`upload_url` from `prepare_upload`. You never see a terminal or run the
-`videoweave-upload` CLI helper; that helper is only needed for Claude Code, the manual
-Python bridge below, or clients without local tool execution (see
-[File Upload](#file-upload)).
+`videoweave-upload` CLI helper; that helper is only needed for Claude Code or the manual
+Python bridge below. Clients with no local execution at all (e.g. Claude.ai Web) skip
+`prepare_upload` entirely and use the web UI instead (see [File Upload](#file-upload)).
 
 > **Do not attach or drag your video/audio file into the chat.** Tell Claude the
 > file's path on your computer instead (e.g. "upload the file at
@@ -217,6 +217,12 @@ a request header — Claude.ai sends it on every request.
 
 Do **not** use header name `x-auth-token` here — VideoWeave's MCP server only reads the
 `Authorization` header, so the header name must be `Authorization`.
+
+**File Upload:** Claude.ai Web has no local execution, so it cannot run the
+`videoweave-upload` CLI or use the Desktop bridge's `upload_file` tool. For uploads, the
+agent should direct you to `https://www.videoweave.io/projects/{project_id}` to upload
+through the existing web UI's Files tab instead of calling `prepare_upload` — see
+[File Upload](#file-upload).
 
 #### Any HTTP MCP Client
 
@@ -462,7 +468,21 @@ Video only — audio untouched.
 ## File Upload
 
 Because the MCP server is hosted remotely, it cannot access files on your local machine
-directly. Uploads use a two-step approach:
+directly. Uploads use a two-step approach — **except for clients with no local execution
+at all (see Step 0)**, which skip both steps and use VideoWeave's existing web UI instead.
+
+### Step 0 — No local execution? Skip straight to the web UI
+
+If the agent has no shell/bash tool and no native upload tool (e.g. Claude.ai Web or
+another browser-based chat client), it should **not** call `prepare_upload`. Instead it
+directs you to open `https://www.videoweave.io/projects/{project_id}` and upload the file
+yourself through that page's Files tab — the same upload feature the regular VideoWeave
+web app has always had. Once you confirm the upload, the agent calls `list_files` to find
+the new file; no `confirm_upload` call is needed for a file uploaded this way. This path
+only supports `WORKING`/`AUDIO`/`LOGO` files — there is currently no way to upload
+`INDEX`/`EXITING`/`BACKGROUND` files from a client with no local execution.
+
+If the agent does have local execution, continue with Step 1 and Step 2 below.
 
 ### Step 1 — Prepare the upload (agent calls MCP tool)
 
@@ -509,8 +529,8 @@ The bridge streams the file straight to VideoWeave's object storage and returns 
 MCP tool result (`isError: false` on success). Once complete, the file is ready — no
 further MCP call is needed.
 
-**Every other client (Claude Code, the manual Python bridge, or any client without local
-tool execution):** run the `videoweave-upload` CLI helper with the URL from Step 1:
+**Every other client with local execution (Claude Code, the manual Python bridge):** run
+the `videoweave-upload` CLI helper with the URL from Step 1:
 
 ```bash
 videoweave-upload --url "<upload_url>" --file "/path/to/clip01.mp4"

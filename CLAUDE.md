@@ -203,6 +203,13 @@ the `videoweave-upload` CLI.
 **Claude Code CLI**: Connects directly to `https://api.videoweave.io/mcp/v1` via HTTP.
 Session tokens are managed per the `X-MCP-Session-Token` / `X-MCP-Session-Refresh` headers.
 
+**Claude.ai Web (and other browser-based MCP clients with no local execution)**: No
+shell/bash tool, no bridge. For file uploads, do not call `prepare_upload` — instead
+direct the user to `https://www.videoweave.io/projects/{project_id}` to upload through
+the existing web UI's Files tab, then call `list_files` once they confirm. This covers
+`WORKING`/`AUDIO`/`LOGO` files only; there is currently no upload path for
+`INDEX`/`EXITING`/`BACKGROUND` files from a client with no local execution.
+
 **API key format**: Always starts with `vw_`. Generated at VideoWeave → Settings → API Keys.
 
 ---
