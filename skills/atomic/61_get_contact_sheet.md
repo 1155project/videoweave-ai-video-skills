@@ -44,13 +44,17 @@ into context one at a time. Free — synchronous, no job.
 ```
 
 ## Expected Response
+The MCP tool result's `content` array has **two** blocks: a `text` block with the JSON
+below, and an `image` block carrying the same grid image inline (base64) — you can view
+it directly without fetching `contact_sheet_url` at all.
 ```json
 {
   "contact_sheet_url": "https://...",
   "samples": 6
 }
 ```
-`contact_sheet_url` is a presigned URL, valid for 1 hour.
+`contact_sheet_url` is a presigned URL, valid for 1 hour — kept for clients that prefer
+to fetch or log it, but you don't need it just to see the sheet.
 
 ## Error Handling
 | Error | Meaning | Action |

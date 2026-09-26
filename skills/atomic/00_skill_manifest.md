@@ -22,6 +22,23 @@ authentication is handled at connection time.
 
 ---
 
+## Task Guides (start here)
+
+Load a guide for the workflow you're doing; consult the atomic skill files below only for
+exact parameter schemas. The 5 guides in `../guides/` group all 69 tools by task rather
+than by API category — this catalog's per-tool detail hasn't moved, only the navigation
+layer on top of it:
+
+| Guide | Covers |
+|---|---|
+| [`01_upload_and_setup.md`](../guides/01_upload_and_setup.md) | Account, projects, file upload/list/rename/delete, `get_media_info` |
+| [`02_assemble.md`](../guides/02_assemble.md) | Timeline building, frame/contact-sheet inspection, cut/trim/join/speed/fade/reverse, undo |
+| [`03_look_and_color.md`](../guides/03_look_and_color.md) | Color correction, geometric transforms, quality fixes, stylistic looks, motion/animation, chroma key, frame rate, logo/text overlays |
+| [`04_audio.md`](../guides/04_audio.md) | Waveform/audio-segment/silence inspection, add/remove/volume/extract audio |
+| [`05_export.md`](../guides/05_export.md) | `finalize_video`, job status/cost transparency, `estimate_credits`, `get_file_url`, annotations |
+
+---
+
 ## Skill Catalog
 
 ### Account
@@ -120,8 +137,9 @@ authentication is handled at connection time.
 ### Jobs
 | Skill File | Tool Name | What It Does |
 |---|---|---|
-| `24_get_job_status.md` | `get_job_status` | Check the status of an async edit job |
-| `25_get_active_job.md` | `get_active_job` | Check if any job is currently running for a project |
+| `24_get_job_status.md` | `get_job_status` | Check the status of an async edit job. Response includes `output_file_id` and `credits_charged`. |
+| `25_get_active_job.md` | `get_active_job` | Check if any job is currently running for a project. Same fields as above. |
+| *(see `../guides/05_export.md`)* | `estimate_credits` | Estimate the credit cost of an operation before running it. Free — synchronous, no job. |
 
 ---
 
@@ -245,6 +263,9 @@ convert_frame_rate   → requires: project_id, file_id of clip in track, target_
 
 get_job_status       → requires: project_id, job_id (returned by any edit operation)
 get_active_job       → requires: project_id
+estimate_credits     → requires: operation_type (string). Optional duration_seconds
+                        (default 0.0), resolution (default "720p"). No project/file
+                        dependency — pure calculation, works before a file even exists.
 ```
 
 ---

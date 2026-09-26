@@ -43,13 +43,17 @@ frame looks like; it does not tell you what it means — that interpretation is 
 ```
 
 ## Expected Response
+The MCP tool result's `content` array has **two** blocks: a `text` block with the JSON
+below, and an `image` block carrying the same frame inline (base64) — you can view it
+directly without fetching `frame_url` at all.
 ```json
 {
   "frame_url": "https://...",
   "timestamp": 4.5
 }
 ```
-`frame_url` is a presigned URL, valid for 1 hour.
+`frame_url` is a presigned URL, valid for 1 hour — kept for clients that prefer to fetch
+or log it, but you don't need it just to see the frame.
 
 ## Error Handling
 | Error | Meaning | Action |

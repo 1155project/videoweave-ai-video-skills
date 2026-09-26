@@ -26,12 +26,13 @@ an async operation — poll `get_job_status` after calling.
 - Sufficient credits
 
 ## Position
-Text position is specified as pixel coordinates (`position_x`, `position_y`) from the
-top-left corner of the video frame. Common positions for 1080p video (1920×1080):
-- Top center title: `x=960, y=80`
-- Lower third: `x=100, y=900`
-- Center: `x=960, y=540`
-- Bottom center caption: `x=960, y=980`
+Text position is specified as **percentages** (`position_x`, `position_y`, each 0-100)
+from the top-left corner of the video frame — not pixels, so the same values work
+regardless of the clip's actual resolution. Common positions:
+- Top center title: `x=50, y=10`
+- Lower third: `x=10, y=90`
+- Center: `x=50, y=50`
+- Bottom center caption: `x=50, y=95`
 
 ## Available Fonts
 The VideoWeave server has a set of installed system fonts. Common options:
@@ -56,8 +57,8 @@ If unsure of available fonts, default to `"Arial"`.
 | `italic` | boolean | No | false | Italic text |
 | `underline` | boolean | No | false | Underlined text |
 | `alignment` | string | No | `"center"` | `"left"`, `"center"`, or `"right"` |
-| `position_x` | integer | No | 960 | X coordinate (pixels from left) |
-| `position_y` | integer | No | 50 | Y coordinate (pixels from top) |
+| `position_x` | integer | No | 50 | Horizontal position, 0-100 (% from left) |
+| `position_y` | integer | No | 80 | Vertical position, 0-100 (% from top) |
 
 ## MCP Tool Call
 ```json
@@ -72,8 +73,8 @@ If unsure of available fonts, default to `"Arial"`.
     "font_color": "#FFFFFF",
     "bold": true,
     "alignment": "center",
-    "position_x": 960,
-    "position_y": 80
+    "position_x": 50,
+    "position_y": 10
   }
 }
 ```

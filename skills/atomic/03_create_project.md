@@ -27,7 +27,7 @@ Active MCP session. No other skills needed.
 |---|---|---|---|
 | `title` | string | Yes | Project name (e.g., "Product Launch Video") |
 | `description` | string | No | Optional description |
-| `transition_type` | string | No | Default transition between clips: `"NONE"`, `"FADE"`, `"DISSOLVE"` |
+| `transition_type` | string | No | Default transition between clips: `"none"`, `"fade"`, `"dissolve"` |
 
 ## MCP Tool Call
 ```json
@@ -36,7 +36,7 @@ Active MCP session. No other skills needed.
   "params": {
     "title": "Product Launch Video",
     "description": "Q3 product launch campaign clips",
-    "transition_type": "FADE"
+    "transition_type": "fade"
   }
 }
 ```
@@ -48,7 +48,7 @@ Active MCP session. No other skills needed.
   "title": "Product Launch Video",
   "description": "Q3 product launch campaign clips",
   "status": "NEW",
-  "transition_type": "FADE",
+  "transition_type": "fade",
   "created_at": "2026-06-26T10:00:00Z"
 }
 ```

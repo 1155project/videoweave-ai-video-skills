@@ -4,12 +4,14 @@ This repository contains everything an LLM client (Claude Desktop, Claude Code, 
 MCP-compatible agent) needs to control VideoWeave on behalf of a user.
 
 VideoWeave exposes a hosted **Model Context Protocol (MCP) server** that gives AI agents
-68 tools covering the full video editing workflow: project management, file upload,
+69 tools covering the full video editing workflow: project management, file upload,
 timeline editing, a full video-effects suite (cut, trim, fade, reverse, volume adjustment,
 per-track audio inspection/removal/extraction, color correction, geometric transforms,
 quality/restoration filters, stylistic looks, motion/animation, chroma key compositing, and
 frame rate conversion), deterministic media inspection (frame/audio sampling, scene and
-silence detection) with externally-supplied annotation storage, and job tracking.
+silence detection, with single-frame/contact-sheet/waveform images returned inline) with
+externally-supplied annotation storage, credit-cost estimation, and job tracking (including
+the output file produced and credits actually charged).
 
 ---
 
@@ -95,6 +97,14 @@ skills/
     67_get_file_annotations.md
   chains/
     01_create_project_and_upload.md
+  guides/                           — task-oriented entry points; load the one matching
+                                       your current task, atomic files remain the
+                                       parameter-level reference
+    01_upload_and_setup.md
+    02_assemble.md
+    03_look_and_color.md
+    04_audio.md
+    05_export.md
 examples/
   claude_desktop_config.json       — Claude Desktop manual config example
 ```
@@ -341,10 +351,10 @@ the evidence means is the calling agent's job.
 
 | Tool | Description |
 |------|-------------|
-| `get_media_frame` | Extract a single frame from a clip at a timestamp as a viewable image |
-| `get_media_frames` | Extract a series of frames over a time range at a fixed interval (max 50 per call) |
-| `get_contact_sheet` | Build one grid image of evenly-spaced sample frames across a clip, for quick visual triage |
-| `get_waveform` | Generate a waveform image of a clip's full audio track |
+| `get_media_frame` | Extract a single frame from a clip at a timestamp as a viewable image — returned **inline** (no extra fetch needed), plus a URL |
+| `get_media_frames` | Extract a series of frames over a time range at a fixed interval (max 50 per call) — URL-only; 50 inline images in one response would be too large |
+| `get_contact_sheet` | Build one grid image of evenly-spaced sample frames across a clip, for quick visual triage — returned **inline**, plus a URL |
+| `get_waveform` | Generate a waveform image of a clip's full audio track — returned **inline**, plus a URL |
 | `get_audio_segment` | Extract a time-bounded audio clip (max 300 seconds) to listen to a specific segment |
 | `detect_scene_changes` | Detect timestamps where the visual content changes significantly |
 | `detect_silence` | Detect time ranges where the audio track is below a noise threshold |
@@ -460,8 +470,9 @@ Video only — audio untouched.
 
 | Tool | Description |
 |------|-------------|
-| `get_job_status` | Check status: QUEUED / PROCESSING / COMPLETED / FAILED |
-| `get_active_job` | Check if any job is currently running |
+| `get_job_status` | Check status: QUEUED / PROCESSING / COMPLETED / FAILED. Response includes `output_file_id` and `credits_charged`. |
+| `get_active_job` | Check if any job is currently running. Same fields as above. |
+| `estimate_credits` | Estimate the credit cost of an operation before running it (`operation_type`, optional `duration_seconds`/`resolution`). Free — synchronous, no job. Uses the exact same calculation the real charge uses, so it can't drift. |
 
 ---
 
@@ -604,10 +615,12 @@ Edit operations consume credits from your VideoWeave plan. Approximate costs:
 | apply_vignette / apply_sepia / apply_grayscale / pixelate_video / apply_emboss / detect_edges | 10–15 |
 | zoom_video / pan_video / ken_burns_video / apply_chroma_key | 20–25 |
 | get_media_info | Free — synchronous, no credits consumed |
+| estimate_credits | Free — synchronous, no credits consumed. Prices an operation *before* you run it. |
 
 These are approximate, grouped by typical processing time — every job actually costs a base
-amount plus a per-minute-of-output charge, so the real cost for any specific clip is shown by
-`get_project_stats`, not a fixed per-tool number.
+amount plus a per-minute-of-output charge. `estimate_credits` gives you that exact number
+before running an operation; `get_project_stats` shows the real cumulative total after the
+fact — neither is a fixed per-tool number like the table above.
 
 Check your balance before starting a session:
 
@@ -793,8 +806,8 @@ mcpb pack videoweave-desktop-extension/ videoweave-1.0.0.mcpb
 > directory (e.g. `videoweave-desktop-extension.mcpb`). Always provide an
 > explicit output name for releases.
 
-Name the output `videoweave-desktop-extension.mcpb` (or `-stage.mcpb` for the staging
-config) and place it in this `ai_consumer_integration/` folder. The `sync-ai-skills` CI
+Name the output `videoweave-desktop-extension.mcpb` and place it in this
+`ai_consumer_integration/` folder. The `sync-ai-skills` CI
 job mirrors this folder to the public
 [videoweave-ai-video-skills](https://github.com/1155project/videoweave-ai-video-skills)
 repo on every successful production deploy, so committing it here is what publishes it —

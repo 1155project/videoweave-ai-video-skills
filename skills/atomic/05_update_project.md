@@ -26,7 +26,7 @@ Update a project's title, description, or default transition type.
 | `project_id` | UUID string | Yes | Project to update |
 | `title` | string | No | New project title |
 | `description` | string | No | New description |
-| `transition_type` | string | No | `"NONE"`, `"FADE"`, or `"DISSOLVE"` |
+| `transition_type` | string | No | `"none"`, `"fade"`, or `"dissolve"` |
 
 At least one of `title`, `description`, or `transition_type` must be provided.
 
@@ -47,7 +47,7 @@ At least one of `title`, `description`, or `transition_type` must be provided.
   "id": "uuid",
   "title": "Summer Campaign 2026 — Final Cut",
   "status": "IN_PROGRESS",
-  "transition_type": "FADE",
+  "transition_type": "fade",
   "updated_at": "2026-06-26T15:00:00Z"
 }
 ```

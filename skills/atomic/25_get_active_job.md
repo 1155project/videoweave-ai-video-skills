@@ -45,9 +45,15 @@ Use this as a safety check before starting new edit operations to avoid job conf
   "job_id": "uuid",
   "status": "PROCESSING",
   "operation": "JOIN",
-  "created_at": "2026-06-26T10:00:00Z"
+  "created_at": "2026-06-26T10:00:00Z",
+  "output_file_id": null,
+  "credits_charged": 22
 }
 ```
+`output_file_id` is typically still `null` while a job is `PROCESSING` (it's only
+populated once the job actually produces a file); `credits_charged` reflects what's
+already been deducted for this job. See `24_get_job_status.md` for the full field
+explanation — this tool returns the same shape.
 
 ## Expected Response (no active job)
 ```json
