@@ -176,6 +176,11 @@ Python bridge below. Clients with no local execution at all (e.g. Claude.ai Web)
 > first, `upload_file` will report "File not found" because it's looking on your
 > computer for a path that only exists in the conversation.
 
+**Downloads are automatic too.** The bridge exposes a built-in `download_file` tool
+that streams a finished video (or any project file) straight to your computer — Claude
+calls it directly with the `download_url` from `get_file_url` and a local `output_path`
+you give it. No `curl`, no terminal.
+
 > See [Building the Desktop Extension](#building-the-desktop-extension) if you are
 > a developer who needs to build or modify the `.mcpb` file.
 
@@ -220,6 +225,11 @@ a request header — Claude.ai sends it on every request.
    - Value: `Bearer vw_YOUR_API_KEY_HERE` — include the literal word `Bearer` and the
      space; Claude sends the header value exactly as entered, with no scheme added
 5. Click **Add**, then enable VideoWeave from the chat's **+ → Connectors** menu
+
+> **Note:** If you already have a VideoWeave connector configured, don't add a second
+> one — Claude.ai will register it under an auto-generated suffixed name (e.g.
+> `VideoWeave-c0bc68d9`) rather than replacing the original, and both will appear as
+> live, functionally-identical connectors.
 
 > **Note:** Request header authentication is in beta and only available to some accounts/
 > orgs. If your Add-connector dialog has no **Request headers** section, this isn't

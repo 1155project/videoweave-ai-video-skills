@@ -198,7 +198,9 @@ index returns `400` immediately, not a job that fails later.
 session token caching automatically — you never need to manage tokens manually. When
 connected via the Desktop Extension, the bridge also exposes a local `upload_file` tool
 — call it directly with `file_path`/`upload_url` instead of instructing the user to run
-the `videoweave-upload` CLI.
+the `videoweave-upload` CLI. It also exposes a local `download_file` tool — call it
+directly with `download_url` (from `get_file_url`) and a local `output_path` to save a
+file, instead of telling the user to run `curl` themselves.
 
 **Claude Code CLI**: Connects directly to `https://api.videoweave.io/mcp/v1` via HTTP.
 Session tokens are managed per the `X-MCP-Session-Token` / `X-MCP-Session-Refresh` headers.

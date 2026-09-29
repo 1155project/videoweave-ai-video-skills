@@ -19,6 +19,7 @@ const http = require("http");
 const readline = require("readline");
 const fs = require("fs");
 const os = require("os");
+const path = require("path");
 
 const DEFAULT_URL = "https://api.videoweave.io/mcp/v1";
 const MAX_FILE_SIZE_BYTES = 500 * 1024 * 1024; // 500 MB, matches documented file constraints
@@ -53,6 +54,27 @@ const UPLOAD_FILE_TOOL = {
       },
     },
     required: ["file_path", "upload_url"],
+  },
+};
+
+const DOWNLOAD_FILE_TOOL = {
+  name: "download_file",
+  description:
+    "Download a file from VideoWeave to a local path using a presigned URL from get_file_url. " +
+    "Runs locally — the file is streamed directly to this machine, never through the LLM.",
+  inputSchema: {
+    type: "object",
+    properties: {
+      download_url: {
+        type: "string",
+        description: "Presigned download URL returned by the get_file_url MCP tool.",
+      },
+      output_path: {
+        type: "string",
+        description: "Local path to save the file to. '~' is expanded to the home directory.",
+      },
+    },
+    required: ["download_url", "output_path"],
   },
 };
 
@@ -157,6 +179,92 @@ function uploadFile(filePath, uploadUrl, callback) {
   readStream.pipe(req);
 }
 
+function downloadFile(downloadUrl, outputPath, callback) {
+  if (!downloadUrl || !outputPath) {
+    callback({ text: "Both download_url and output_path are required.", isError: true });
+    return;
+  }
+
+  const resolvedOutputPath =
+    outputPath.startsWith("~") ? outputPath.replace(/^~/, os.homedir()) : outputPath;
+
+  const parentDir = path.dirname(resolvedOutputPath);
+  if (!fs.existsSync(parentDir)) {
+    callback({ text: `Directory does not exist: ${parentDir}`, isError: true });
+    return;
+  }
+
+  let url;
+  try {
+    url = new URL(downloadUrl);
+  } catch (e) {
+    callback({ text: `Invalid download_url: ${e.message}`, isError: true });
+    return;
+  }
+  const lib = url.protocol === "https:" ? https : http;
+
+  const options = {
+    hostname: url.hostname,
+    port: url.port || (url.protocol === "https:" ? 443 : 80),
+    path: url.pathname + (url.search || ""),
+    method: "GET",
+  };
+
+  const req = lib.request(options, (res) => {
+    if (res.statusCode !== 200) {
+      let body = "";
+      res.on("data", (chunk) => { body += chunk; });
+      res.on("end", () => {
+        callback({
+          text: `Download failed — HTTP ${res.statusCode}: ${body.slice(0, 500)}`,
+          isError: true,
+        });
+      });
+      return;
+    }
+
+    const expectedSize = res.headers["content-length"]
+      ? parseInt(res.headers["content-length"], 10)
+      : null;
+    let bytesWritten = 0;
+
+    const writeStream = fs.createWriteStream(resolvedOutputPath);
+    res.on("data", (chunk) => { bytesWritten += chunk.length; });
+
+    writeStream.on("error", (e) => {
+      callback({ text: `Failed to write file: ${e.message}`, isError: true });
+      res.destroy();
+    });
+
+    writeStream.on("finish", () => {
+      if (expectedSize !== null && bytesWritten !== expectedSize) {
+        callback({
+          text: `Download incomplete: wrote ${humanSize(bytesWritten)} but expected ${humanSize(expectedSize)}.`,
+          isError: true,
+        });
+        return;
+      }
+      callback({
+        text: `Download complete: ${resolvedOutputPath.split(/[\\/]/).pop()} (${humanSize(bytesWritten)})`,
+        isError: false,
+      });
+    });
+
+    res.pipe(writeStream);
+  });
+
+  req.setTimeout(3600000, () => {
+    req.destroy();
+    callback({ text: "Download timed out (3600s). The connection may be too slow.", isError: true });
+  });
+
+  req.on("error", (e) => {
+    callback({ text: `Download failed: ${e.message}`, isError: true });
+  });
+
+  req.end();
+}
+
 function post(payload, callback) {
   const body = JSON.stringify(payload);
   const url = new URL(serverUrl);
@@ -244,6 +352,14 @@ rl.on("line", (line) => {
     return;
   }
 
+  if (payload.method === "tools/call" && payload.params && payload.params.name === "download_file") {
+    const args = payload.params.arguments || {};
+    downloadFile(args.download_url, args.output_path, ({ text, isError }) => {
+      process.stdout.write(JSON.stringify(toolResult(payload.id, text, isError)) + "\n");
+    });
+    return;
+  }
+
   post(payload, (response) => {
     if (
       payload.method === "tools/list" &&
@@ -252,6 +368,7 @@ rl.on("line", (line) => {
       Array.isArray(response.result.tools)
     ) {
       response.result.tools.push(UPLOAD_FILE_TOOL);
+      response.result.tools.push(DOWNLOAD_FILE_TOOL);
     }
     process.stdout.write(JSON.stringify(response) + "\n");
   });

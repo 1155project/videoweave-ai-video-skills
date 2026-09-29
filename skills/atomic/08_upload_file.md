@@ -113,6 +113,10 @@ location on their computer; the bridge will report "File not found" when you try
 use that attachment as `file_path`. Ask the user for the file's actual local path
 instead (e.g. "What's the path to clip01.mp4 on your computer?").
 
+After the bridge reports success, call `confirm_upload` with the `project_id` and
+`file_id` from Step 1 — this generates the thumbnail and detects video dimensions
+server-side (see below).
+
 **Every other client with local execution** (Claude Code, the manual Python bridge):
 run the VideoWeave CLI helper with the presigned URL:
 
@@ -120,8 +124,22 @@ run the VideoWeave CLI helper with the presigned URL:
 videoweave-upload --url "<upload_url>" --file "/path/to/clip01.mp4"
 ```
 
-The CLI script streams the file to storage and confirms completion. The `file_id` is
-already registered in the database — no further call is needed.
+The CLI script only streams the file's bytes to storage — it does **not** call
+`confirm_upload`. You must call it yourself after the CLI exits successfully, with the
+`project_id` and `file_id` from Step 1:
+
+```json
+{
+  "tool": "confirm_upload",
+  "params": {
+    "project_id": "uuid",
+    "file_id": "uuid"
+  }
+}
+```
+
+This generates the thumbnail and (for video files) detects resolution server-side.
+Skipping this step leaves the file registered but without a thumbnail.
 
 **Note:** This branch assumes the agent environment can run local scripts (e.g., via a
 bash tool in Claude Code) and call this directly. If you find yourself here with no way
@@ -146,6 +164,7 @@ After the upload completes, the file is available in the project. Verify with `l
 
 ## Example
 User: "Upload clip01.mp4 from my clips folder to the Summer Campaign project"
-→ Call `upload_file` → get `file_id` + `upload_url`
+→ Call `prepare_upload` → get `file_id` + `upload_url`
 → Run: `videoweave-upload --url "..." --file "~/clips/clip01.mp4"`
+→ Call `confirm_upload` with `project_id` + `file_id`
 → "clip01.mp4 uploaded successfully. File ID: xyz-456. Ready to add to the timeline."
