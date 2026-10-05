@@ -1,0 +1,23 @@
+{
+  "name": "videoweave",
+  "displayName": "VideoWeave",
+  "version": "1.7.0",
+  "description": "Edit and produce videos with VideoWeave: connects the VideoWeave MCP server and adds a skill that loads the server's usage guide.",
+  "author": {
+    "name": "VideoWeave",
+    "url": "https://videoweave.io"
+  },
+  "homepage": "https://videoweave.io",
+  "repository": "https://github.com/1155project/videoweave-ai-video-skills",
+  "license": "MIT",
+  "keywords": ["video", "editing", "mcp"],
+  "userConfig": {
+    "api_key": {
+      "type": "string",
+      "title": "VideoWeave API key",
+      "description": "Generate one at VideoWeave > Settings > API Keys. It starts with vw_.",
+      "sensitive": true,
+      "required": true
+    }
+  }
+}

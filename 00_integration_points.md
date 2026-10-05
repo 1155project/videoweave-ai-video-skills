@@ -2,7 +2,7 @@
 name: "AI Consumer Integration — Integration Points"
 description: |
   Architecture and design document for the VideoWeave MCP server, covering auth,
-  file transfers, tool mapping, skill manifest design, and in-app chat planning.
+  file transfers, tool mapping, skill delivery design, and in-app chat planning.
 ---
 
 # AI Consumer Integration — Integration Points
@@ -273,52 +273,27 @@ agent handles this correctly without user intervention.
 
 ## Skill System Design
 
-### Two-Tier Structure
+> **Superseded (2026-10).** The original design below shipped ~70 per-tool markdown "skills" plus a
+> manifest as a package users installed. That drifted from the real tools and was heavy to install, so
+> usage guidance now lives **in the MCP server** and is read on demand.
 
-**Tier 1 — Atomic Skills** (one MCP tool call each)
-One markdown file per operation. Located in `skills/atomic/`. Self-contained: includes
-inputs, the exact MCP tool call, expected output, and chaining metadata.
+**Guidance is served by the server.** The markdown files live in `backend/src/mcp_guides/`
+(`overview`, `guides/`, `chains/`, `tools/`) and are returned by the `get_guide` MCP tool (and hinted at
+in the `initialize` result's `instructions`). A backend unit test fails when a tool and its guide
+disagree, so the guidance cannot silently go stale.
 
-**Tier 2 — Chain Skills** (sequences of atomic skills)
-Located in `skills/chains/`. Reference atomic skills by name. Include the full step
-sequence, decision points, and error recovery. Can be user-authored or VideoWeave-provided.
+**One thin client-side skill.** `skill/videoweave/SKILL.md` only tells the LLM to call `get_guide`
+first. It names no tools, so it does not drift. It ships inside the Claude Code plugin and as
+`videoweave-skill.zip` for claude.ai / Claude Desktop.
 
-### Skill Manifest
+**Packaging.** `scripts/build_distribution.py` builds the plugin, marketplace, skill zip, and `.mcpb`
+from a single `VERSION`; CI publishes the built output to the public repo. See `README.md`
+("Building and publishing").
 
-`skills/atomic/00_skill_manifest.md` is a single routing document loaded by the agent
-at session start. It contains:
-- Full catalog of available skills with one-line descriptions
-- Dependency graph (which skills require others to run first)
-- Common multi-step pattern examples (implicit chain hints)
-- Output/input compatibility matrix for chaining
-
-The manifest is the agent's "table of contents" — it reads this first, then pulls
-individual skill files as needed.
-
-### Skill Package Distribution
-
-A skill package is a zip/tarball of all skill markdown files, installed into the user's
-LLM client as a set of custom instructions or context files. Initial package targets
-Claude (CLAUDE.md skills format). Future translation targets:
-
-| LLM Platform | Format |
-|---|---|
-| Claude | CLAUDE.md skill files (current) |
-| OpenAI GPT Actions | OpenAPI spec + system prompt |
-| OpenAI Assistants API | Function definitions JSON |
-| Generic | System prompt injection |
-
-Translation is mechanical once atomic skills are tested and stable. The logic does not
-change — only the format wrapper.
-
-### Future: Skill Repository
-
-A public repository (hosted by VideoWeave or on GitHub) where users can publish and
-download complex chain skills. Examples: "Create LMS-compatible video", "Brand all
-clips with intro/outro/logo", "Split long recording into chapters". Discovery via a
-future `/skill-library` page in the VideoWeave UI.
-
----
+**Other LLM platforms** (OpenAI GPT Actions, Assistants function definitions, Cursor, Codex, ...) are
+future build targets: the server-side guidance is platform-neutral, so adding one means a new output in
+the build script, not rewriting content. The public `skill://` resource convention from the MCP
+Skills-over-MCP working group is a possible later addition on the server.
 
 ## Scenario 2 — In-App Chat (Planning Summary)
 
@@ -384,11 +359,9 @@ minimal adaptation — the inputs/outputs are the same, only the delivery mechan
 - All edit operation tools with job polling
 - Undo
 
-### Phase 4 — Skills Package
-- Write and test all atomic skill files
-- Write and test skill manifest
-- Write example chain skills
-- Package as installable zip
+### Phase 4 — Skills Package (superseded by server-delivered guides, see Skill System Design)
+- Guides, chains, and per-tool docs in `backend/src/mcp_guides/` served by `get_guide`
+- One thin client skill and the build in `scripts/build_distribution.py`
 
 ### Phase 5 — Hardening
 - Rate limiting per API key

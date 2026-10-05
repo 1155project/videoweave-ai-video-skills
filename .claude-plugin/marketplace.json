@@ -1,0 +1,16 @@
+{
+  "name": "videoweave",
+  "description": "VideoWeave plugins for Claude Code",
+  "owner": {
+    "name": "VideoWeave",
+    "url": "https://videoweave.io"
+  },
+  "plugins": [
+    {
+      "name": "videoweave",
+      "source": "./plugins/videoweave",
+      "description": "Edit and produce videos with VideoWeave: connects the VideoWeave MCP server and a skill that loads its usage guide.",
+      "version": "1.7.0"
+    }
+  ]
+}

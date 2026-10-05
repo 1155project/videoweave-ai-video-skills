@@ -4,14 +4,14 @@ This repository contains everything an LLM client (Claude Desktop, Claude Code, 
 MCP-compatible agent) needs to control VideoWeave on behalf of a user.
 
 VideoWeave exposes a hosted **Model Context Protocol (MCP) server** that gives AI agents
-69 tools covering the full video editing workflow: project management, file upload,
-timeline editing, a full video-effects suite (cut, trim, fade, reverse, volume adjustment,
-per-track audio inspection/removal/extraction, color correction, geometric transforms,
-quality/restoration filters, stylistic looks, motion/animation, chroma key compositing, and
-frame rate conversion), deterministic media inspection (frame/audio sampling, scene and
-silence detection, with single-frame/contact-sheet/waveform images returned inline) with
-externally-supplied annotation storage, credit-cost estimation, and job tracking (including
-the output file produced and credits actually charged).
+tools covering the full video editing workflow: project management, file upload, timeline
+editing, a full video-effects suite, deterministic media inspection, credit-cost estimation,
+and job tracking.
+
+**The server documents itself.** Usage guidance (rules, task guides, and per-tool parameters) is
+served by the MCP server through the `get_guide` tool, so it is always current with the tools it
+describes. The only thing you install besides the connection is one small skill that tells the
+LLM to read it.
 
 ---
 
@@ -19,95 +19,21 @@ the output file produced and credits actually charged).
 
 ```
 README.md                          — this file
-CLAUDE.md                          — Claude-specific context loaded at session start
+CHANGELOG.md, VERSION              — release notes; one version number for every artifact below
+CLAUDE.md                          — short context for Claude working in this folder
+.claude-plugin/marketplace.json    — Claude Code marketplace (add this repo to install the plugin)
+plugins/videoweave/                — Claude Code plugin: MCP connection + the VideoWeave skill
+videoweave-skill.zip               — the VideoWeave skill, for claude.ai / Claude Desktop upload
+videoweave-desktop-extension.mcpb  — Claude Desktop Extension (built from the folder below)
+videoweave-desktop-extension/      — extension source: manifest.json, bridge.js (auditable)
 videoweave-upload                  — CLI helper for uploading local files (Python 3)
 videoweave-mcp-bridge              — stdio↔HTTP bridge script for manual Desktop setup
-videoweave-desktop-extension/
-  manifest.json                    — Desktop Extension metadata and user_config schema
-  bridge.js                        — zero-dependency Node.js bridge (bundled in .mcpb)
-skills/
-  atomic/
-    00_skill_manifest.md           — master catalog, load this at session start
-    01_get_account_info.md
-    02_list_projects.md
-    03_create_project.md
-    04_get_project.md
-    05_update_project.md
-    06_delete_project.md
-    07_list_files.md
-    08_upload_file.md
-    09_get_file_url.md
-    10_delete_file.md
-    11_get_track.md
-    12_add_clip_to_track.md
-    13_remove_clip_from_track.md
-    14_cut_video.md
-    15_join_videos.md
-    16_slow_video.md
-    17_speed_up_video.md
-    18_add_audio.md
-    19_remove_audio.md
-    20_add_logo.md
-    21_add_text.md
-    22_undo.md
-    23_finalize_video.md
-    24_get_job_status.md
-    25_get_active_job.md
-    26_get_project_stats.md
-    27_trim_clip.md
-    28_fade_clip.md
-    29_reverse_clip.md
-    30_adjust_audio_volume.md
-    31_extract_audio_track.md
-    32_get_media_info.md
-    33_adjust_brightness.md
-    34_adjust_contrast.md
-    35_adjust_saturation.md
-    36_adjust_gamma.md
-    37_adjust_white_balance.md
-    38_crop_video.md
-    39_rotate_video.md
-    40_flip_video.md
-    41_sharpen_video.md
-    42_blur_video.md
-    43_denoise_video.md
-    44_deblock_video.md
-    45_enhance_video.md
-    46_apply_vignette.md
-    47_apply_sepia.md
-    48_apply_grayscale.md
-    49_pixelate_video.md
-    50_apply_emboss.md
-    51_detect_edges.md
-    52_zoom_video.md
-    53_pan_video.md
-    54_ken_burns_video.md
-    55_apply_chroma_key.md
-    56_convert_frame_rate.md
-    57_rename_file.md
-    58_bulk_delete_files.md
-    59_get_media_frame.md
-    60_get_media_frames.md
-    61_get_contact_sheet.md
-    62_get_waveform.md
-    63_get_audio_segment.md
-    64_detect_scene_changes.md
-    65_detect_silence.md
-    66_set_file_annotations.md
-    67_get_file_annotations.md
-  chains/
-    01_create_project_and_upload.md
-  guides/                           — task-oriented entry points; load the one matching
-                                       your current task, atomic files remain the
-                                       parameter-level reference
-    01_upload_and_setup.md
-    02_assemble.md
-    03_look_and_color.md
-    04_audio.md
-    05_export.md
-examples/
-  claude_desktop_config.json       — Claude Desktop manual config example
+examples/claude_desktop_config.json — Claude Desktop manual config example
 ```
+
+In the source repository (`1155project/video_sticher`) this folder also holds `skill/`, `plugin/`,
+`marketplace.json` and `scripts/build_distribution.py`, which generate everything above. The
+usage guides themselves live in the backend at `backend/src/mcp_guides/`.
 
 ---
 
@@ -134,7 +60,19 @@ examples/
 
 ### Step 2 — Connect your LLM client
 
-#### Claude Code (CLI) — Simplest setup
+#### Claude Code (CLI) — Plugin (Recommended)
+
+One install gives you the MCP connection **and** the VideoWeave skill:
+
+```bash
+claude plugin marketplace add 1155project/videoweave-ai-video-skills
+claude plugin install videoweave@videoweave
+```
+
+Claude Code asks for your API key when the plugin is enabled and stores it securely. You can also
+run `/plugin` inside a session to browse and install.
+
+#### Claude Code (CLI) — Manual connection only
 
 ```bash
 claude mcp add --transport http videoweave https://api.videoweave.io/mcp/v1 \
@@ -270,14 +208,19 @@ chmod +x videoweave-upload
 cp videoweave-upload /usr/local/bin/videoweave-upload
 ```
 
-### Step 4 — Load the skill manifest
+### Step 4 — Install the VideoWeave skill
 
-In your Claude session, add the skill manifest to your context:
+The skill is a small file that tells your LLM to call `get_guide` first. It is optional (the server also
+sends the same hint in its `initialize` response and in tool descriptions), but it makes the model reliably
+read the guide before it starts.
 
-```
-Load the VideoWeave skill manifest from skills/atomic/00_skill_manifest.md
-and use it to help me edit my videos.
-```
+| Client | How |
+|---|---|
+| Claude Code | Already included if you installed the plugin above |
+| Claude Desktop / claude.ai | Download `videoweave-skill.zip` from the [latest release](https://github.com/1155project/videoweave-ai-video-skills/releases/latest) and upload it under **Settings → Features** (code execution must be enabled; custom skills are per-user, not organization-wide) |
+| Other MCP clients | Skip it. Tell your LLM: "Call the `get_guide` tool with topic `overview` before using VideoWeave" |
+
+You do not need to load any other files. Everything else is read from the server on demand.
 
 ---
 
@@ -311,178 +254,17 @@ Only a SHA-256 hash is persisted. Treat the raw key like a password.
 
 ## Tool Reference
 
-All tools are called via `tools/call` in the MCP JSON-RPC protocol. The agent selects
-and calls the appropriate tool based on the user's request.
+Tools, parameters, and workflows are documented by the server itself, not in this file, so they never
+go out of date. Ask your LLM to call `get_guide` (no arguments lists every topic), or call it yourself:
 
-### Account
+```
+get_guide                                 → index of all topics
+get_guide(topic="overview")               → rules every session needs; start here
+get_guide(topic="guides/assemble")        → task guides (upload_and_setup, assemble, look_and_color, audio, export)
+get_guide(topic="tools/cut_video")        → exact parameters for one tool
+```
 
-| Tool | Description |
-|------|-------------|
-| `get_account_info` | User profile, credit balance, subscription plan |
-
-### Projects
-
-| Tool | Description |
-|------|-------------|
-| `list_projects` | List all projects (paginated) |
-| `create_project` | Create a new project |
-| `get_project` | Get project details and storage usage |
-| `get_project_stats` | Get credits consumed, storage used, and estimated USD cost for a project |
-| `update_project` | Rename or change project settings |
-| `delete_project` | Permanently delete a project and all files |
-
-### Files
-
-| Tool | Description |
-|------|-------------|
-| `list_files` | List all files in a project |
-| `prepare_upload` | Register a file and get a presigned upload URL |
-| `get_file_url` | Get a 1-hour presigned download URL |
-| `delete_file` | Permanently delete a file |
-| `rename_file` | Rename a file's display name |
-| `bulk_delete_files` | Delete up to 100 files from a project in one call |
-| `confirm_upload` | Confirm a completed upload and generate its thumbnail |
-| `get_media_info` | List every video/audio stream in a file — codecs, resolution or channels/sample rate, language tags. **Free — synchronous, no job.** |
-
-### Timeline (Track)
-
-| Tool | Description |
-|------|-------------|
-| `get_track` | Get the ordered clip list for the timeline |
-| `add_clip_to_track` | Append a file to the timeline |
-| `remove_clip_from_track` | Remove a clip without deleting the file |
-
-### Media Inspection
-
-All tools in this section are free — synchronous, no job. Each is a deterministic
-signal or sample ("the image changed at 12.3 seconds," "here is a frame at 4.5
-seconds") — never a semantic judgment ("this is the kitchen"). Interpreting what
-the evidence means is the calling agent's job.
-
-| Tool | Description |
-|------|-------------|
-| `get_media_frame` | Extract a single frame from a clip at a timestamp as a viewable image — returned **inline** (no extra fetch needed), plus a URL |
-| `get_media_frames` | Extract a series of frames over a time range at a fixed interval (max 50 per call) — URL-only; 50 inline images in one response would be too large |
-| `get_contact_sheet` | Build one grid image of evenly-spaced sample frames across a clip, for quick visual triage — returned **inline**, plus a URL |
-| `get_waveform` | Generate a waveform image of a clip's full audio track — returned **inline**, plus a URL |
-| `get_audio_segment` | Extract a time-bounded audio clip (max 300 seconds) to listen to a specific segment |
-| `detect_scene_changes` | Detect timestamps where the visual content changes significantly |
-| `detect_silence` | Detect time ranges where the audio track is below a noise threshold |
-
-### Annotations
-
-VideoWeave stores annotations the calling agent supplies; it never generates or
-validates their content. Each `set_file_annotations` call adds a new entry —
-annotations are additive, not overwrite-only, so a file can accumulate them
-across sessions.
-
-| Tool | Description |
-|------|-------------|
-| `set_file_annotations` | Store your own semantic conclusions about a file (scene, quality, features, narrative role, etc.) |
-| `get_file_annotations` | Retrieve previously stored annotations for a file, newest first |
-
-### Edit Operations ⚡ Async
-
-These tools queue a background job and return a `job_id`. Always poll `get_job_status`
-until the status is `COMPLETED` or `FAILED` before proceeding.
-
-| Tool | Description | Typical Time |
-|------|-------------|--------------|
-| `cut_video` | Split a clip at a timestamp | 5–15 s |
-| `join_videos` | Merge two or more clips | 10–30 s |
-| `slow_video` | Slow down 2×, 3×, or 4× | 15–45 s |
-| `speed_up_video` | Speed up 2× or 3× | 10–30 s |
-| `add_audio` | Add or replace audio on a clip | 10–30 s |
-| `remove_audio` | Strip audio from a clip — all of it, or one specific track via `track_index` (see `get_media_info`) | 5–15 s |
-| `trim_clip` | Extract a `[start_time, end_time]` sub-segment as one new clip (unlike `cut_video`, which splits into two) | 5–15 s |
-| `fade_clip` | Fade a clip in and/or out — video and audio together | 10–30 s |
-| `reverse_clip` | Reverse a clip's playback — video and audio together (rejected if the clip is very long) | 15–60 s |
-| `adjust_audio_volume` | Adjust a clip's own audio gain by a multiplier (0.1–2.0) | 10–20 s |
-| `extract_audio_track` | Save one audio stream from a clip as a standalone AUDIO file — does **not** modify the source clip | 5–15 s |
-| `add_logo` | Overlay a logo/watermark | 10–30 s |
-| `add_text` | Add a styled text overlay | 10–30 s |
-| `undo` | Restore timeline to a previous snapshot | instant |
-| `finalize_video` | Join all clips into a final output | 30–120 s |
-
-### Color Correction ⚡ Async
-
-Video only — audio untouched.
-
-| Tool | Description | Typical Time |
-|------|-------------|--------------|
-| `adjust_brightness` | Adjust a clip's brightness | 10–30 s |
-| `adjust_contrast` | Adjust a clip's contrast | 10–30 s |
-| `adjust_saturation` | Adjust a clip's color saturation (`saturation=0` produces a fully grayscale output) | 10–30 s |
-| `adjust_gamma` | Adjust a clip's gamma (midtone brightness) | 10–30 s |
-| `adjust_white_balance` | Adjust a clip's color balance via independent red/green/blue channel gamma (each defaults to 1.0 — no-op) | 10–30 s |
-
-### Geometric Transforms ⚡ Async
-
-Video only — audio untouched.
-
-| Tool | Description | Typical Time |
-|------|-------------|--------------|
-| `crop_video` | Crop a clip to a pixel rectangle — call `get_media_info` first to learn actual pixel dimensions; an out-of-bounds rectangle is rejected (`400`) | 10–30 s |
-| `rotate_video` | Rotate a clip by 90, 180, or 270 degrees (90/270 swap width and height) | 10–30 s |
-| `flip_video` | Mirror a clip horizontally or vertically | 10–30 s |
-
-### Quality & Restoration ⚡ Async
-
-Video only — audio untouched.
-
-| Tool | Description | Typical Time |
-|------|-------------|--------------|
-| `sharpen_video` | Sharpen a clip (optional `amount`, 0.0–5.0, default 0.0 no-op) | 10–30 s |
-| `blur_video` | Blur a clip (optional `amount`, 0.0–20.0, default 0.0 no-op) | 10–30 s |
-| `denoise_video` | Reduce noise/grain in a clip (optional `amount`, 0.0–3.0, default 0.0 no-op) | 15–45 s |
-| `deblock_video` | Reduce compression blockiness in a clip (no tunable parameter) | 15–45 s |
-| `enhance_video` | A single quality-improvement pass combining color, sharpness, and noise reduction (optional `strength`, 0.0–1.0, default 0.5 — an active improvement, not a no-op) | 15–45 s |
-
-### Stylistic Looks ⚡ Async
-
-Video only — audio untouched.
-
-| Tool | Description | Typical Time |
-|------|-------------|--------------|
-| `apply_vignette` | Apply a vignette effect — darkened edges (optional `strength`, 0.0–1.0, default 0.0 no-op) | 10–30 s |
-| `apply_sepia` | Apply a sepia tone (no tunable parameter) | 10–30 s |
-| `apply_grayscale` | Convert a clip to grayscale — equivalent to `adjust_saturation` with `saturation=0`, offered as its own tool for discoverability (no tunable parameter) | 10–30 s |
-| `pixelate_video` | Apply a pixelation/mosaic effect (optional `block_size`, 1–64, default 1 no-op) | 10–30 s |
-| `apply_emboss` | Apply an emboss/relief effect (no tunable parameter) | 10–30 s |
-| `detect_edges` | Apply an edge-detection outline effect (no tunable parameter) | 10–30 s |
-
-### Motion & Animation ⚡ Async
-
-Video only — audio untouched. Each tool animates across the ENTIRE clip with no
-timeline-windowing support.
-
-| Tool | Description | Typical Time |
-|------|-------------|--------------|
-| `zoom_video` | Animate a zoom from one level to another across the whole clip | 20–60 s |
-| `pan_video` | Pan across the frame in one direction at a fixed zoom level, across the whole clip | 20–60 s |
-| `ken_burns_video` | Apply an animated zoom-and-pan (Ken Burns) effect — combines `zoom_video` + `pan_video` in one call | 20–60 s |
-
-### Chroma Key Compositing ⚡ Async
-
-| Tool | Description | Typical Time |
-|------|-------------|--------------|
-| `apply_chroma_key` | Composite a green/blue-screen clip onto a background image (`background_file_id` must reference an image, file_type `BACKGROUND`; video backgrounds not yet supported). Audio from the foreground clip is preserved. | 20–60 s |
-
-### Frame Rate ⚡ Async
-
-Video only — audio untouched.
-
-| Tool | Description | Typical Time |
-|------|-------------|--------------|
-| `convert_frame_rate` | Resample a clip to a target frame rate via frame drop/duplicate (`target_fps`, `0 < target_fps ≤ 120`); playback speed and duration are unchanged | 15–45 s |
-
-### Jobs
-
-| Tool | Description |
-|------|-------------|
-| `get_job_status` | Check status: QUEUED / PROCESSING / COMPLETED / FAILED. Response includes `output_file_id` and `credits_charged`. |
-| `get_active_job` | Check if any job is currently running. Same fields as above. |
-| `estimate_credits` | Estimate the credit cost of an operation before running it (`operation_type`, optional `duration_seconds`/`resolution`). Free — synchronous, no job. Uses the exact same calculation the real charge uses, so it can't drift. |
+`tools/list` returns the authoritative tool names and JSON Schemas.
 
 ---
 
@@ -580,126 +362,17 @@ it can run this automatically. Otherwise it provides the command for you to run.
 
 ---
 
-## Working with Async Operations
+## Using VideoWeave
 
-Edit operations are processed in the background. The correct polling pattern is:
+The essentials every client should know (the full rules are in `get_guide(topic="overview")`):
 
-```
-1. Call edit tool (cut_video / add_text / etc.)
-   → Returns: { "job_id": "uuid", "status": "QUEUED" }
-
-2. Wait 3 seconds
-
-3. Call get_job_status with the job_id
-   → Returns: { "status": "PROCESSING" | "COMPLETED" | "FAILED" }
-
-4. If PROCESSING → wait 3 seconds and go to step 3
-   If COMPLETED → proceed with next operation
-   If FAILED → report error_message to user
-```
-
-**Only one job can run per project at a time.** The agent should never start a second
-edit operation before the first is `COMPLETED`. Use `get_active_job` to check before
-starting any edit.
-
-**`get_media_info` is the one exception** — it's a synchronous media inspection (no
-background job, no polling), same as `get_track`/`list_files`. It returns its result
-immediately.
-
----
-
-## Credit System
-
-Edit operations consume credits from your VideoWeave plan. Approximate costs:
-
-| Operation | Credits |
-|-----------|---------|
-| cut / join / trim / fade / finalize | 15–20 |
-| slow / speed_up / reverse | 20–25 |
-| add_audio / remove_audio / adjust_audio_volume | 10–15 |
-| extract_audio_track | 15–20 |
-| add_logo / add_text | 15–20 |
-| adjust_brightness / adjust_contrast / adjust_saturation / adjust_gamma / adjust_white_balance | 10–15 |
-| crop_video / rotate_video / flip_video | 10–15 |
-| sharpen_video / blur_video / denoise_video / deblock_video / enhance_video / convert_frame_rate | 15–20 |
-| apply_vignette / apply_sepia / apply_grayscale / pixelate_video / apply_emboss / detect_edges | 10–15 |
-| zoom_video / pan_video / ken_burns_video / apply_chroma_key | 20–25 |
-| get_media_info | Free — synchronous, no credits consumed |
-| estimate_credits | Free — synchronous, no credits consumed. Prices an operation *before* you run it. |
-
-These are approximate, grouped by typical processing time — every job actually costs a base
-amount plus a per-minute-of-output charge. `estimate_credits` gives you that exact number
-before running an operation; `get_project_stats` shows the real cumulative total after the
-fact — neither is a fixed per-tool number like the table above.
-
-Check your balance before starting a session:
-
-```
-Call get_account_info → check credits_remaining
-```
-
-If an edit job fails with a payment error, the user must purchase additional credits from
-their VideoWeave account before continuing.
-
----
-
-## Common Workflows
-
-### Start a new project and add clips
-
-```
-create_project → prepare_upload (×N) + videoweave-upload (×N) → add_clip_to_track (×N) → get_track
-```
-
-See chain skill: `skills/chains/01_create_project_and_upload.md`
-
-### Edit a clip and verify
-
-```
-get_track → [edit tool] → get_job_status (poll) → get_track
-```
-
-### Add branding and produce final output
-
-```
-get_track → add_logo (each clip, poll each) → finalize_video → get_job_status (poll) → get_file_url
-```
-
-### Undo a mistake
-
-```
-get_track [save snapshot] → [edit runs] → undo (pass saved snapshot) → get_track [verify]
-```
-
-### Inspect and remove/extract a specific audio track
-
-```
-get_track → get_media_info [note the type-relative audio_streams index] →
-  remove_audio (with track_index) OR extract_audio_track (with track_index) →
-  get_job_status (poll)
-```
-
-Always call `get_media_info` first when targeting a specific track — never guess an
-index. A `track_index` beyond the file's actual audio stream count returns `400`
-immediately, not a queued job that fails later.
-
----
-
-## Skills
-
-Skills are structured markdown documents that tell the AI exactly how to call each tool —
-what parameters to use, what the response means, how to chain into the next step, and how
-to handle errors.
-
-**Load `skills/atomic/00_skill_manifest.md` at the start of every VideoWeave session.**
-It is the master index and contains dependency rules, the async polling rule, and common
-multi-step patterns.
-
-Individual skill files are in `skills/atomic/`. Chain skills (multi-step workflows) are
-in `skills/chains/`.
-
-You can author your own chain skills by composing atomic skills. Use
-`skills/chains/01_create_project_and_upload.md` as a template.
+- **Edit operations are asynchronous.** They return a `job_id` with status `QUEUED`; poll
+  `get_job_status` every few seconds until `COMPLETED` or `FAILED`. One job runs per project at a time.
+- **Edits cost credits.** Use `estimate_credits` to price an operation before running it,
+  `get_account_info` for your balance, and `get_project_stats` for what a project has used. Failed
+  jobs are refunded.
+- **Workflows** (start a project, edit a clip, add branding, undo, work with audio tracks) are in the
+  task guides under `get_guide`.
 
 ---
 
@@ -712,9 +385,9 @@ specification version `2024-11-05`.
 
 | Method | Description |
 |--------|-------------|
-| `initialize` | Handshake — returns server capabilities |
+| `initialize` | Handshake — returns server capabilities and a short `instructions` string pointing at `get_guide` |
 | `ping` | Health check |
-| `tools/list` | Returns all 33 tool definitions with JSON Schema |
+| `tools/list` | Returns all tool definitions with JSON Schema |
 | `tools/call` | Execute a tool |
 
 ### Example Request/Response
@@ -789,52 +462,42 @@ The manifest declares two user-configurable fields:
 Claude Desktop presents these as a settings form when the user installs the extension.
 `sensitive: true` on `api_key` ensures it is masked in the UI and encrypted at rest.
 
-### Building the .mcpb file
+### Building and publishing
 
-Install the `mcpb` CLI (published by Anthropic):
-
-```bash
-npm install -g @anthropic-ai/mcpb
-mcpb --version   # should print 2.x.x
-```
-
-Validate the manifest before packing:
+Everything published to the public repo is produced by one script from one version number:
 
 ```bash
-mcpb validate videoweave-desktop-extension/manifest.json
-# → Manifest schema validation passes!
+python3 ai_consumer_integration/scripts/build_distribution.py --check        # validate only
+python3 ai_consumer_integration/scripts/build_distribution.py --out /tmp/vw  # build (no .mcpb)
+python3 ai_consumer_integration/scripts/build_distribution.py --out /tmp/vw --pack-mcpb
 ```
 
-Pack the extension into a distributable file:
+`--pack-mcpb` needs the `mcpb` CLI (`npm install -g @anthropic-ai/mcpb`). The build **fails** (and so
+does the `backend` unit test that runs it) when: `VERSION` is not semver, `videoweave-desktop-extension/manifest.json`
+`version` differs from `VERSION`, the tool count in the manifest's `long_description` differs from the server's
+real tool count plus the two bridge-local tools, or the VideoWeave skill names any tool other than `get_guide`.
 
-```bash
-mcpb pack videoweave-desktop-extension/ videoweave-1.0.0.mcpb
-# → produces videoweave-1.0.0.mcpb in the current directory
-```
+The `.mcpb` is **never committed**; CI builds it. The `sync-ai-skills` job in `.github/workflows/docker-build.yml`
+runs after a successful production deploy, builds the distribution, replaces the contents of the public
+[videoweave-ai-video-skills](https://github.com/1155project/videoweave-ai-video-skills) repo with the built
+output, and tags `v<VERSION>` (attaching the skill zip and `.mcpb` to a release). Only the production server URL is
+ever shipped.
 
-> Without the second argument, `mcpb pack` names the output file after the
-> directory (e.g. `videoweave-desktop-extension.mcpb`). Always provide an
-> explicit output name for releases.
-
-Name the output `videoweave-desktop-extension.mcpb` and place it in this
-`ai_consumer_integration/` folder. The `sync-ai-skills` CI
-job mirrors this folder to the public
-[videoweave-ai-video-skills](https://github.com/1155project/videoweave-ai-video-skills)
-repo on every successful production deploy, so committing it here is what publishes it —
-no separate upload step. Once synced, it's downloadable at:
-`https://raw.githubusercontent.com/1155project/videoweave-ai-video-skills/main/videoweave-desktop-extension.mcpb`
+To validate the generated plugin locally, run `claude plugin validate <out>` and
+`claude plugin validate <out>/plugins/videoweave`.
 
 ### Updating the extension
 
-1. Increment `"version"` in `manifest.json`
-2. Edit `bridge.js` or `manifest.json` as needed
-3. `mcpb validate videoweave-desktop-extension/manifest.json`
-4. `mcpb pack videoweave-desktop-extension/ videoweave-<new-version>.mcpb`
-5. Publish the new `.mcpb` file
+1. Edit `bridge.js` or `manifest.json` as needed.
+2. Bump `ai_consumer_integration/VERSION` **and** `manifest.json` `"version"` together, and add a
+   `## <version>` heading to `CHANGELOG.md`.
+3. If you added or removed a bridge-local tool, update `BRIDGE_LOCAL_TOOLS` in
+   `backend/tests/unit/test_mcp_guides_drift.py` and `BRIDGE_LOCAL_TOOL_COUNT` in the build script, and add or
+   remove its `tools/<name>.md` guide.
+4. Run `--check`, then merge. CI publishes on the next production deploy.
 
-Users who installed via the official Claude Desktop directory receive updates
-automatically. Users who installed a private file share must re-download and
-re-install.
+Users who installed via the official Claude Desktop directory receive updates automatically. Users who
+installed a downloaded `.mcpb` must re-download and re-install.
 
 ### Testing locally before packing
 
@@ -878,16 +541,11 @@ Expected response:
 
 ---
 
-## Contributing Skills
+## Contributing
 
-We welcome community-contributed chain skills. A chain skill should:
-
-1. Use the frontmatter schema (see existing chain skills)
-2. Reference only atomic tools from the skill manifest
-3. Include a complete worked example
-4. Describe natural extension points for further work
-
-Open a pull request in this repository with your new skill file under `skills/chains/`.
+This repository is generated; do not edit it directly. The usage guides (`overview`, task guides, chains,
+per-tool docs) live in the main repository under `backend/src/mcp_guides/`, and a unit test fails if a tool
+and its guide ever disagree. Open issues here; changes go through the main repository.
 
 ---
 
