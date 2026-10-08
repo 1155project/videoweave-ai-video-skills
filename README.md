@@ -370,7 +370,7 @@ The essentials every client should know (the full rules are in `get_guide(topic=
   `get_job_status` every few seconds until `COMPLETED` or `FAILED`. One job runs per project at a time.
 - **Edits cost credits.** Use `estimate_credits` to price an operation before running it,
   `get_account_info` for your balance, and `get_project_stats` for what a project has used. Failed
-  jobs are refunded.
+  jobs are refunded; jobs you cancel are not.
 - **Workflows** (start a project, edit a clip, add branding, undo, work with audio tracks) are in the
   task guides under `get_guide`.
 
