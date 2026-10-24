@@ -3,6 +3,28 @@
 Versions follow `VERSION` in this folder. One number drives the Claude Code plugin, the marketplace
 entry, the Desktop extension manifest, and the release tag.
 
+## 1.8.1
+
+- **Added** `credits_charged` in every edit tool's immediate response, `duration_seconds` on `get_track` items, and
+  `output_duration_seconds` / `output_width` / `output_height` on completed jobs in `get_job_status`.
+- **Added** `factor` and `clip_count` parameters to `estimate_credits`, so slow-motion, speed-up and join estimates
+  equal the real charge.
+
+## 1.8.0
+
+- **Added** `list_file_versions` and `restore_file_version` MCP tools: every edit keeps the file it replaced, so a
+  clip's earlier versions can be listed and any of them restored instantly (no credits, timeline updated).
+- **Changed** `delete_file` / `bulk_delete_files` now remove a file together with all its earlier versions; the id of
+  an earlier version is refused. Edit responses can carry a `storage_warning` and edits are refused (507) when the
+  plan's storage limit is exceeded by more than 10%.
+- **Changed** the Desktop extension description now says 75 tools.
+
+## 1.7.1
+
+- **Fixed** `videoweave-upload` sent both `Content-Length` and chunked transfer encoding, which strict storage
+  endpoints reject with HTTP 400. It now sends `Content-Length` only.
+- **Changed** the Desktop extension description now says 73 tools (the server added `cancel_job`).
+
 ## 1.7.0
 
 New delivery model. Usage guidance now lives in the VideoWeave MCP server itself and is read through

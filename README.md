@@ -79,8 +79,8 @@ claude mcp add --transport http videoweave https://api.videoweave.io/mcp/v1 \
   --header "Authorization: Bearer vw_YOUR_API_KEY_HERE"
 ```
 
-Verify with `claude mcp list`. If `http` transport is rejected by the server try `sse`
-in place of `http`.
+Verify with `claude mcp list` (or `/mcp` inside Claude Code). VideoWeave uses the `http`
+transport; the older `sse` transport is deprecated.
 
 #### Claude Desktop — Desktop Extension (Recommended)
 
@@ -90,8 +90,9 @@ to install manually. Your API key is entered through Claude Desktop's settings U
 stored encrypted on your machine.
 
 1. Download `videoweave-desktop-extension.mcpb` from [the videoweave-ai-video-skills repo](https://raw.githubusercontent.com/1155project/videoweave-ai-video-skills/main/videoweave-desktop-extension.mcpb)
-2. Open Claude Desktop → click **+** in the chat box → **Connectors**
-3. Click **Install Extension…** and select the downloaded `.mcpb` file
+2. Open Claude Desktop → **Settings → Extensions** (if **Extensions** is missing, your
+   organization has turned extensions off)
+3. Drag the downloaded `.mcpb` file onto that page, choose **Install** and confirm
 4. Enter your `vw_` API key when prompted and click **Save**
 5. Restart Claude Desktop — the VideoWeave tools appear in the **+** menu
 
@@ -154,11 +155,13 @@ Save the file and restart Claude Desktop.
 VideoWeave MCP uses API key auth, not OAuth, so pick **No sign-in** and supply the key as
 a request header — Claude.ai sends it on every request.
 
-1. Go to **claude.ai → Settings → Connectors** (Team/Enterprise: **Organization settings
-   → Connectors**) and click **Add custom connector**
+1. Go to **claude.ai → Customize → Connectors** and click **Add custom connector**
+   (Team/Enterprise: an Owner goes to **Organization settings → Connectors → Add → Custom**,
+   chooses **Web**, and members then click **Connect** on the connector)
 2. Enter the MCP server URL: `https://api.videoweave.io/mcp/v1`
 3. Under **Authentication**, choose **No sign-in**
-4. Under **Request headers**, add:
+4. Under **Request headers**, add (mark it **Required**; you can't edit authentication
+   settings later, so to change the key remove the connector and add it again):
    - Name: `Authorization`
    - Value: `Bearer vw_YOUR_API_KEY_HERE` — include the literal word `Bearer` and the
      space; Claude sends the header value exactly as entered, with no scheme added

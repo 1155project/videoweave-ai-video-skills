@@ -34,6 +34,42 @@ def _human_size(n_bytes: int) -> str:
     return f"{n_bytes:.1f} TB"
 
 
+class _ProgressFile:
+    """File-like request body with a known length.
+
+    ``requests`` sends a body with ``__len__`` using ``Content-Length``. A generator body would be sent with
+    ``Transfer-Encoding: chunked`` alongside our own Content-Length, which strict storage endpoints reject
+    with HTTP 400, so never pass a generator here.
+    """
+
+    def __init__(self, path: str, size: int, read_size: int):
+        self._fh = open(path, "rb")
+        self._size = size
+        self._read_size = read_size
+        self.uploaded = 0
+        self._last_pct = -1
+
+    def __len__(self) -> int:
+        return self._size
+
+    def read(self, amt: int = -1) -> bytes:
+        chunk = self._fh.read(self._read_size if amt is None or amt < 0 else min(amt, self._read_size))
+        if chunk:
+            self.uploaded += len(chunk)
+            self._progress()
+        return chunk
+
+    def _progress(self) -> None:
+        pct = int(self.uploaded / self._size * 100) if self._size else 100
+        if pct != self._last_pct:
+            bar = "#" * (pct // 2) + "." * (50 - pct // 2)
+            print(f"\r  [{bar}] {pct:3d}%  {_human_size(self.uploaded)}/{_human_size(self._size)}", end="", flush=True)
+            self._last_pct = pct
+
+    def close(self) -> None:
+        self._fh.close()
+
+
 def upload(url: str, file_path: str, chunk_size: int = 1024 * 1024) -> None:
     if not os.path.isfile(file_path):
         print(f"Error: file not found: {file_path}")
@@ -44,30 +80,14 @@ def upload(url: str, file_path: str, chunk_size: int = 1024 * 1024) -> None:
 
     print(f"Uploading {filename} ({_human_size(file_size)}) ...")
 
-    uploaded = 0
-    last_pct = -1
-
-    def _stream():
-        nonlocal uploaded, last_pct
-        with open(file_path, "rb") as fh:
-            while True:
-                chunk = fh.read(chunk_size)
-                if not chunk:
-                    break
-                uploaded += len(chunk)
-                pct = int(uploaded / file_size * 100)
-                if pct != last_pct:
-                    bar = "#" * (pct // 2) + "." * (50 - pct // 2)
-                    print(f"\r  [{bar}] {pct:3d}%  {_human_size(uploaded)}/{_human_size(file_size)}", end="", flush=True)
-                    last_pct = pct
-                yield chunk
-
-    headers = {
-        "Content-Type": "application/octet-stream",
-        "Content-Length": str(file_size),
-    }
-
-    response = requests.put(url, data=_stream(), headers=headers, timeout=3600)
+    body = _ProgressFile(file_path, file_size, chunk_size)
+    try:
+        # Content-Length comes from len(body); do not set it (or Transfer-Encoding) by hand.
+        response = requests.put(
+            url, data=body, headers={"Content-Type": "application/octet-stream"}, timeout=3600
+        )
+    finally:
+        body.close()
     print()  # newline after progress bar
 
     if response.status_code in (200, 204):
