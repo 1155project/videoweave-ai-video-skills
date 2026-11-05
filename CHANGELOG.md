@@ -3,6 +3,17 @@
 Versions follow `VERSION` in this folder. One number drives the Claude Code plugin, the marketplace
 entry, the Desktop extension manifest, and the release tag.
 
+## 1.9.0
+
+- **Added** `list_transitions` MCP tool: browse the 58 transitions by family (fades, wipes, slides, covers and reveals,
+  shapes, diagonals, slices and winds, effects) or check one name, so an assistant no longer says only `none` and
+  `fade` exist.
+- **Changed** `transition_type` on `join_videos`, `finalize_video`, `create_project` and `update_project` accepts any
+  transition (it was documented as none, fade or dissolve only); an unknown name is refused with the closest matches.
+- **Fixed** `wibetr` is now `wipetr` (wipe from the top-right corner): ffmpeg rejected the old spelling, so jobs that
+  used it failed. Added `fadefast` and `fadeslow`.
+- **Changed** the Desktop extension description now says 76 tools.
+
 ## 1.8.1
 
 - **Added** `credits_charged` in every edit tool's immediate response, `duration_seconds` on `get_track` items, and

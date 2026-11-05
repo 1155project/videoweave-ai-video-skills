@@ -103,7 +103,7 @@ locally. It requires nothing beyond Claude Desktop itself.
 your local file straight to VideoWeave's storage — Claude calls it directly with the
 `file_id`/`upload_url` from `prepare_upload`. You never see a terminal or run the
 `videoweave-upload` CLI helper; that helper is only needed for Claude Code or the manual
-Python bridge below. Clients with no local execution at all (e.g. Claude.ai Web) skip
+Python bridge below. Clients with no local execution at all (e.g. Claude.ai Web, ChatGPT) skip
 `prepare_upload` entirely and use the web UI instead (see [File Upload](#file-upload)).
 
 > **Do not attach or drag your video/audio file into the chat.** Tell Claude the
@@ -152,8 +152,9 @@ Save the file and restart Claude Desktop.
 
 #### Claude.ai Web
 
-VideoWeave MCP uses API key auth, not OAuth, so pick **No sign-in** and supply the key as
-a request header — Claude.ai sends it on every request.
+Claude.ai connects with the API key (the OAuth sign-in described under
+[ChatGPT](#chatgpt) below is not verified with Claude.ai yet), so pick **No sign-in** and
+supply the key as a request header — Claude.ai sends it on every request.
 
 1. Go to **claude.ai → Customize → Connectors** and click **Add custom connector**
    (Team/Enterprise: an Owner goes to **Organization settings → Connectors → Add → Custom**,
@@ -183,6 +184,36 @@ Do **not** use header name `x-auth-token` here — VideoWeave's MCP server only 
 `videoweave-upload` CLI or use the Desktop bridge's `upload_file` tool. For uploads, the
 agent should direct you to `https://www.videoweave.io/projects/{project_id}` to upload
 through the existing web UI's Files tab instead of calling `prepare_upload` — see
+[File Upload](#file-upload).
+
+#### ChatGPT
+
+ChatGPT can only connect to an MCP server that offers OAuth, and it has no API-key option.
+VideoWeave's OAuth sign-in is on for it: ChatGPT registers itself, sends you to VideoWeave to
+sign in and approve the connection, and then calls the server with a token of its own. No
+API key is involved. (Menu names below were taken from vendor guides and a connection on the
+stage environment on 2026-10-31; ChatGPT renames them often. Developer mode is only on some
+paid plans.)
+
+1. In ChatGPT open **Settings → Connectors** (**Apps** in some versions) → **Advanced
+   settings** and turn **Developer mode** on
+2. Back in **Connectors** choose **Create** (or **New connector**), name it `VideoWeave`
+   and enter the MCP server URL: `https://api.videoweave.io/mcp/v1`
+3. For **Authentication** choose **OAuth**; leave any client ID and secret fields empty
+   (ChatGPT registers itself with VideoWeave), tick **I trust this application** and click
+   **Create**
+4. ChatGPT opens VideoWeave: sign in if asked, check the app name and the address it will
+   return to on the **Connect an AI app** screen, and click **Connect** (tenant admins who use
+   2FA are asked for a verification code first)
+5. In a new chat turn VideoWeave on and ask *"List my VideoWeave projects."* to check it
+
+> **Note:** The sign-in link is valid for 10 minutes. Disconnect ChatGPT any time under
+> **Settings → Connected AI apps** on VideoWeave; its access and refresh tokens stop working
+> immediately.
+
+**File Upload:** ChatGPT has no local execution, so, like Claude.ai Web, it cannot use
+`prepare_upload` with a local file. Direct the user to
+`https://www.videoweave.io/projects/{project_id}` to upload through the Files tab — see
 [File Upload](#file-upload).
 
 #### Any HTTP MCP Client
@@ -279,7 +310,7 @@ at all (see Step 0)**, which skip both steps and use VideoWeave's existing web U
 
 ### Step 0 — No local execution? Skip straight to the web UI
 
-If the agent has no shell/bash tool and no native upload tool (e.g. Claude.ai Web or
+If the agent has no shell/bash tool and no native upload tool (e.g. Claude.ai Web, ChatGPT or
 another browser-based chat client), it should **not** call `prepare_upload`. Instead it
 directs you to open `https://www.videoweave.io/projects/{project_id}` and upload the file
 yourself through that page's Files tab — the same upload feature the regular VideoWeave
