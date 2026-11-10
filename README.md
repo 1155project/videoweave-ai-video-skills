@@ -89,7 +89,7 @@ the recommended path for Desktop users — no terminal, no config file editing, 
 to install manually. Your API key is entered through Claude Desktop's settings UI and
 stored encrypted on your machine.
 
-1. Download `videoweave-desktop-extension.mcpb` from [the videoweave-ai-video-skills repo](https://raw.githubusercontent.com/1155project/videoweave-ai-video-skills/main/videoweave-desktop-extension.mcpb)
+1. Download `videoweave-desktop-extension.mcpb` from the [latest release](https://github.com/1155project/videoweave-ai-video-skills/releases/latest/download/videoweave-desktop-extension.mcpb) (all releases are on [the videoweave-ai-video-skills repo](https://github.com/1155project/videoweave-ai-video-skills/releases))
 2. Open Claude Desktop → **Settings → Extensions** (if **Extensions** is missing, your
    organization has turned extensions off)
 3. Drag the downloaded `.mcpb` file onto that page, choose **Install** and confirm
@@ -152,33 +152,29 @@ Save the file and restart Claude Desktop.
 
 #### Claude.ai Web
 
-Claude.ai connects with the API key (the OAuth sign-in described under
-[ChatGPT](#chatgpt) below is not verified with Claude.ai yet), so pick **No sign-in** and
-supply the key as a request header — Claude.ai sends it on every request.
+Claude.ai signs in to VideoWeave with your account (OAuth). No API key is needed.
 
 1. Go to **claude.ai → Customize → Connectors** and click **Add custom connector**
    (Team/Enterprise: an Owner goes to **Organization settings → Connectors → Add → Custom**,
    chooses **Web**, and members then click **Connect** on the connector)
 2. Enter the MCP server URL: `https://api.videoweave.io/mcp/v1`
-3. Under **Authentication**, choose **No sign-in**
-4. Under **Request headers**, add (mark it **Required**; you can't edit authentication
-   settings later, so to change the key remove the connector and add it again):
-   - Name: `Authorization`
-   - Value: `Bearer vw_YOUR_API_KEY_HERE` — include the literal word `Bearer` and the
-     space; Claude sends the header value exactly as entered, with no scheme added
-5. Click **Add**, then enable VideoWeave from the chat's **+ → Connectors** menu
+3. Under **Authentication**, choose **Sign in now**
+4. Under **OAuth client**, choose **Register automatically**. Do not choose **Use Claude's
+   published identity**: VideoWeave does not support it yet.
+5. Click **Add**, then **Connect**, and sign in to VideoWeave on the page that opens
+6. Enable VideoWeave from the chat's **+ → Connectors** menu and send "List my VideoWeave projects."
+
+> **Note:** The dialog layout varies by organization: it is either one screen with
+> **Advanced settings** (put the OAuth client there) or two steps. Free plans can add one
+> custom connector.
 
 > **Note:** If you already have a VideoWeave connector configured, don't add a second
 > one — Claude.ai will register it under an auto-generated suffixed name (e.g.
 > `VideoWeave-c0bc68d9`) rather than replacing the original, and both will appear as
 > live, functionally-identical connectors.
 
-> **Note:** Request header authentication is in beta and only available to some accounts/
-> orgs. If your Add-connector dialog has no **Request headers** section, this isn't
-> enabled for you yet — use Claude Code or the Desktop Extension (above) in the meantime.
-
-Do **not** use header name `x-auth-token` here — VideoWeave's MCP server only reads the
-`Authorization` header, so the header name must be `Authorization`.
+> **Note:** Authentication settings cannot be edited after you add a connector. To change
+> them, remove the connector and add it again; members then reconnect.
 
 **File Upload:** Claude.ai Web has no local execution, so it cannot run the
 `videoweave-upload` CLI or use the Desktop bridge's `upload_file` tool. For uploads, the
