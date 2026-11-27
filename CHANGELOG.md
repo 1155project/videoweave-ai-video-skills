@@ -3,6 +3,12 @@
 Versions follow `VERSION` in this folder. One number drives the Claude Code plugin, the marketplace
 entry, the Desktop extension manifest, and the release tag.
 
+## 1.10.0
+
+- **Added** `add_inset_video` MCP tool: show a second clip as a small picture in a corner of the main clip, with a
+  choice of corner, size, timing and sound (main, inset or both). The result replaces the main clip; the second clip is
+  left unchanged.
+
 ## 1.9.0
 
 - **Added** `list_transitions` MCP tool: browse the 58 transitions by family (fades, wipes, slides, covers and reveals,
